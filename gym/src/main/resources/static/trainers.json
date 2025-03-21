@@ -1,0 +1,38 @@
+[
+  {
+    "id": 101,
+    "firstname": "John",
+    "lastname": "Doe",
+    "username": "John.Doe",
+    "password": "`b.Z/JVO=.",
+    "isActive": true,
+    "specialization": {
+      "id": 1,
+      "name": "Strength Training"
+    }
+  },
+  {
+    "id": 102,
+    "firstname": "Jane",
+    "lastname": "Smith",
+    "username": "Jane.Smith",
+    "password": "0g|UDZ4Gu?",
+    "isActive": true,
+    "specialization": {
+      "id": 2,
+      "name": "Cardio"
+    }
+  },
+  {
+    "id": 103,
+    "firstname": "Mike",
+    "lastname": "Johnson",
+    "username": "Mike.Johnson",
+    "password": "^qOK,JkOw]",
+    "isActive": true,
+    "specialization": {
+      "id": 3,
+      "name": "Flexibility & Mobility"
+    }
+  }
+]

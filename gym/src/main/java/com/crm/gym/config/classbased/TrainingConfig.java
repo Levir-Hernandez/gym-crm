@@ -1,11 +1,10 @@
-package com.crm.gym.config;
+package com.crm.gym.config.classbased;
 
 import com.crm.gym.entities.Trainee;
 import com.crm.gym.entities.Trainer;
 import com.crm.gym.entities.Training;
 import com.crm.gym.entities.TrainingType;
 import com.crm.gym.util.IdGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

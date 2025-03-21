@@ -1,4 +1,4 @@
-package com.crm.gym.config;
+package com.crm.gym.config.classbased;
 
 import java.util.Random;
 import com.crm.gym.util.*;
@@ -24,8 +24,14 @@ public class UtilConfig
     }
 
     @Bean
-    public PasswordGenerator passwordGenerator()
+    public PasswordGenerator passwordGenerator(Random random)
     {
-        return new PasswordGeneratorImpl(new Random());
+        return new PasswordGeneratorImpl(random);
+    }
+
+    @Bean
+    public Random random()
+    {
+        return new Random();
     }
 }

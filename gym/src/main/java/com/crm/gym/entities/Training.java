@@ -5,8 +5,10 @@ import lombok.AllArgsConstructor;
 
 import java.util.Date;
 import com.crm.gym.repositories.interfaces.Identifiable;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class Training implements Identifiable<Long>
 {

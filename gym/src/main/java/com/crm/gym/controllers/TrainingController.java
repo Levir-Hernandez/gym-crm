@@ -2,10 +2,7 @@ package com.crm.gym.controllers;
 
 import com.crm.gym.entities.Training;
 import com.crm.gym.services.TrainingService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,5 +27,11 @@ public class TrainingController
     public List<Training> getAllTrainings()
     {
         return trainingService.getAllEntities();
+    }
+
+    @PostMapping("/new")
+    public void createTraining(@RequestBody Training training)
+    {
+        trainingService.saveEntity(training);
     }
 }

@@ -1,4 +1,4 @@
-package com.crm.gym.config;
+package com.crm.gym.config.classbased;
 
 import java.util.Map;
 import java.util.Date;
