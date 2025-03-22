@@ -1,98 +1,26 @@
 [
   {
-    "id": 101,
     "name": "Strength Basics",
-    "date": "2025-06-07T05:00:00.000+00:00",
+    "date": "2025-06-07",
     "duration": 60,
-    "trainee": {
-      "id": 1,
-      "firstname": "Alice",
-      "lastname": "Smith",
-      "username": "Alice.Smith",
-      "password": "kW,w_dpeKl",
-      "isActive": true,
-      "birthdate": "1990-06-15T05:00:00.000+00:00",
-      "address": "123 Main St"
-    },
-    "trainer": {
-      "id": 1,
-      "firstname": "John",
-      "lastname": "Doe",
-      "username": "John.Doe",
-      "password": "`b.Z/JVO=.",
-      "isActive": true,
-      "specialization": {
-        "id": 1,
-        "name": "Strength Training"
-      }
-    },
-    "type": {
-      "id": 1,
-      "name": "Strength Training"
-    }
+    "traineeId": 1,
+    "trainerId": 1,
+    "trainingTypeId": 1
   },
   {
-    "id": 102,
     "name": "Cardio Blast",
-    "date": "2025-06-15T05:00:00.000+00:00",
+    "date": "2025-06-15",
     "duration": 45,
-    "trainee": {
-      "id": 2,
-      "firstname": "Bob",
-      "lastname": "Johnson",
-      "username": "Bob.Johnson",
-      "password": "Yr\"Cz7_Fcc",
-      "isActive": false,
-      "birthdate": "1985-11-20T05:00:00.000+00:00",
-      "address": "456 Elm St"
-    },
-    "trainer": {
-      "id": 2,
-      "firstname": "Jane",
-      "lastname": "Smith",
-      "username": "Jane.Smith",
-      "password": "0g|UDZ4Gu?",
-      "isActive": true,
-      "specialization": {
-        "id": 2,
-        "name": "Cardio"
-      }
-    },
-    "type": {
-      "id": 2,
-      "name": "Cardio"
-    }
+    "traineeId": 2,
+    "trainerId": 2,
+    "trainingTypeId": 2
   },
   {
-    "id": 103,
     "name": "Flexibility Flow",
-    "date": "2025-06-21T05:00:00.000+00:00",
+    "date": "2025-06-21",
     "duration": 30,
-    "trainee": {
-      "id": 3,
-      "firstname": "Charlie",
-      "lastname": "Brown",
-      "username": "Charlie.Brown",
-      "password": "C%=}_|3=2C",
-      "isActive": true,
-      "birthdate": "1995-03-08T05:00:00.000+00:00",
-      "address": "789 Oak St"
-    },
-    "trainer": {
-      "id": 3,
-      "firstname": "Mike",
-      "lastname": "Johnson",
-      "username": "Mike.Johnson",
-      "password": "^qOK,JkOw]",
-      "isActive": true,
-      "specialization": {
-        "id": 3,
-        "name": "Flexibility & Mobility"
-      }
-    },
-    "type": {
-      "id": 3,
-      "name": "Flexibility & Mobility"
-    }
+    "traineeId": 3,
+    "trainerId": 3,
+    "trainingTypeId": 3
   }
 ]

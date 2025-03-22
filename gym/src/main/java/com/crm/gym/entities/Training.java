@@ -1,11 +1,11 @@
 package com.crm.gym.entities;
 
-import lombok.Data;
-import lombok.AllArgsConstructor;
-
-import java.util.Date;
+import java.time.LocalDate;
 import com.crm.gym.repositories.interfaces.Identifiable;
+
+import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -14,12 +14,12 @@ public class Training implements Identifiable<Long>
 {
     private Long id;
     private String name;
-    private Date date;
+    private LocalDate date;
     private Integer duration;
 
-    private Trainee trainee;
-    private Trainer trainer;
-    private TrainingType type;
+    private Long traineeId;
+    private Long trainerId;
+    private Long trainingTypeId;
 
     @Override public Long getId() {return id;}
 }

@@ -1,6 +1,7 @@
-package com.crm.gym.config.filebased;
+package com.crm.gym.config;
 
 import com.crm.gym.entities.Trainee;
+import com.crm.gym.factories.TraineeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,9 +15,10 @@ import java.util.Map;
 public class TraineeConfig extends TemplateConfig<Long, Trainee>
 {
     public TraineeConfig(ObjectMapper mapper,
-                         @Value("${storage.trainees.path}") String traineePath)
+                         @Value("${storage.trainees.path}") String traineesPath,
+                         TraineeFactory traineeFactory)
     {
-        super(mapper, traineePath);
+        super(mapper, traineesPath, traineeFactory);
     }
 
     @Override

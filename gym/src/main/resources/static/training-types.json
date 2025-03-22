@@ -1,14 +1,5 @@
 [
-  {
-    "id": 101,
-    "name": "Strength Training"
-  },
-  {
-    "id": 102,
-    "name": "Cardio"
-  },
-  {
-    "id": 103,
-    "name": "Flexibility & Mobility"
-  }
+  {"name": "Strength Training"},
+  {"name": "Cardio"},
+  {"name": "Flexibility & Mobility"}
 ]

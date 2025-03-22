@@ -1,32 +1,23 @@
 [
   {
-    "id": 101,
     "firstname": "Alice",
     "lastname": "Smith",
-    "username": "Alice.Smith",
-    "password": "bN^jPVAq'T",
     "isActive": true,
-    "birthdate": "1990-06-15T05:00:00.000+00:00",
+    "birthdate": "1990-06-15",
     "address": "123 Main St"
   },
   {
-    "id": 102,
     "firstname": "Bob",
     "lastname": "Johnson",
-    "username": "Bob.Johnson",
-    "password": "^w.vd-yN<f",
     "isActive": false,
-    "birthdate": "1985-11-20T05:00:00.000+00:00",
+    "birthdate": "1985-11-20",
     "address": "456 Elm St"
   },
   {
-    "id": 103,
     "firstname": "Charlie",
     "lastname": "Brown",
-    "username": "Charlie.Brown",
-    "password": "([Tcm[m<;]",
     "isActive": true,
-    "birthdate": "1995-03-08T05:00:00.000+00:00",
+    "birthdate": "1995-03-08",
     "address": "789 Oak St"
   }
 ]

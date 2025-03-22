@@ -1,7 +1,7 @@
-package com.crm.gym.config.filebased;
+package com.crm.gym.config;
 
+import com.crm.gym.factories.TemplateFactory;
 import com.crm.gym.repositories.interfaces.Identifiable;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.springframework.beans.BeansException;
@@ -18,14 +18,17 @@ import java.util.stream.Collectors;
 
 public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implements BeanFactoryAware
 {
-    private ObjectMapper mapper;
-    private String entitiesPath;
     private DefaultListableBeanFactory beanFactory;
 
-    public TemplateConfig(ObjectMapper mapper, String entitiesPath)
+    private ObjectMapper mapper;
+    private String traineesPath;
+    private TemplateFactory<Id, Entity> entityFactory;
+
+    public TemplateConfig(ObjectMapper mapper, String entitiesPath, TemplateFactory<Id, Entity> templateFactory)
     {
         this.mapper = mapper;
-        this.entitiesPath = entitiesPath;
+        this.traineesPath = entitiesPath;
+        this.entityFactory = templateFactory;
     }
 
     @Override
@@ -38,7 +41,7 @@ public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implem
 
     protected void createEntities(String beanPrefix)
     {
-        Resource entitiesFile = new ClassPathResource(entitiesPath);
+        Resource entitiesFile = new ClassPathResource(traineesPath);
 
         CollectionType collectionType = mapper.getTypeFactory()
                 .constructCollectionType(List.class, getEntityClass());
@@ -48,6 +51,7 @@ public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implem
             List<Entity> entities = mapper.readValue(entitiesFile.getInputStream(), collectionType);
             for (Entity entity : entities)
             {
+                entity = entityFactory.recreate(entity);
                 beanFactory.registerSingleton(beanPrefix+entity.getId(), entity);
             }
         }
