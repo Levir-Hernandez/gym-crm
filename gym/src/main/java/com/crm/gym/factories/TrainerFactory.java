@@ -4,7 +4,6 @@ import com.crm.gym.entities.Trainer;
 import com.crm.gym.util.IdGenerator;
 import com.crm.gym.util.PasswordGenerator;
 import com.crm.gym.util.UsernameGenerator;
-
 import org.springframework.stereotype.Component;
 
 @Component

@@ -1,11 +1,9 @@
 package com.crm.gym.controllers;
 
-import com.crm.gym.entities.Training;
+import java.util.List;
 import com.crm.gym.entities.TrainingType;
 import com.crm.gym.repositories.daos.TrainingTypeDao;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/trainingType")

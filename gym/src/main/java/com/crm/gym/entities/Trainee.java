@@ -1,11 +1,10 @@
 package com.crm.gym.entities;
 
 import lombok.Data;
+import lombok.ToString;
+import java.time.LocalDate;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
-
-import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor

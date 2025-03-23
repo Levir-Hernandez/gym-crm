@@ -1,10 +1,9 @@
 package com.crm.gym.factories;
 
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDate;
 import com.crm.gym.util.IdGenerator;
 import com.crm.gym.entities.Training;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TrainingFactory implements TemplateFactory<Long, Training>

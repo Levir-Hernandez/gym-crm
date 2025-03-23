@@ -1,32 +1,26 @@
 package com.crm.gym.config;
 
-import com.crm.gym.entities.Trainer;
-import com.crm.gym.factories.TrainerFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import jakarta.annotation.PostConstruct;
 
-import java.util.List;
-import java.util.Map;
+import com.crm.gym.repositories.interfaces.TrainerRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.crm.gym.entities.Trainer;
 
 @Configuration
 public class TrainerConfig extends TemplateConfig<Long, Trainer>
 {
     public TrainerConfig(ObjectMapper mapper,
                          @Value("${storage.trainers.path}") String trainersPath,
-                         TrainerFactory trainerFactory)
+                         TrainerRepository trainerRepository)
     {
-        super(mapper, trainersPath, trainerFactory);
+        super(mapper, trainersPath, trainerRepository);
     }
 
     @Override
     protected Class<Trainer> getEntityClass() {return Trainer.class;}
 
     @PostConstruct
-    public void createTrainers() {createEntities("trainer");}
-
-    @Bean
-    public Map<Long, Trainer> trainers(List<Trainer> trainers) {return entities(trainers);}
+    public void createTrainersFromJson() {createEntitiesFromJson("trainer");}
 }

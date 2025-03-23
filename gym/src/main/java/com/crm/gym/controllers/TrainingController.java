@@ -1,10 +1,9 @@
 package com.crm.gym.controllers;
 
+import java.util.List;
 import com.crm.gym.entities.Training;
 import com.crm.gym.services.TrainingService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/training")

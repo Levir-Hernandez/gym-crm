@@ -1,20 +1,17 @@
 package com.crm.gym.config;
 
-import com.crm.gym.factories.TemplateFactory;
-import com.crm.gym.repositories.interfaces.Identifiable;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import com.crm.gym.repositories.interfaces.TemplateRepository;
+import com.crm.gym.repositories.interfaces.Identifiable;
+import org.springframework.beans.factory.BeanFactoryAware;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.BeanFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.BeansException;
 import org.springframework.core.io.Resource;
-
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implements BeanFactoryAware
 {
@@ -22,13 +19,13 @@ public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implem
 
     private ObjectMapper mapper;
     private String traineesPath;
-    private TemplateFactory<Id, Entity> entityFactory;
+    private TemplateRepository<Id, Entity> entityRepository;
 
-    public TemplateConfig(ObjectMapper mapper, String entitiesPath, TemplateFactory<Id, Entity> templateFactory)
+    public TemplateConfig(ObjectMapper mapper, String traineesPath, TemplateRepository<Id, Entity> entityRepository)
     {
         this.mapper = mapper;
-        this.traineesPath = entitiesPath;
-        this.entityFactory = templateFactory;
+        this.traineesPath = traineesPath;
+        this.entityRepository = entityRepository;
     }
 
     @Override
@@ -39,7 +36,7 @@ public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implem
 
     protected abstract Class<Entity> getEntityClass();
 
-    protected void createEntities(String beanPrefix)
+    protected void createEntitiesFromJson(String beanPrefix)
     {
         Resource entitiesFile = new ClassPathResource(traineesPath);
 
@@ -51,18 +48,12 @@ public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implem
             List<Entity> entities = mapper.readValue(entitiesFile.getInputStream(), collectionType);
             for (Entity entity : entities)
             {
-                entity = entityFactory.recreate(entity);
-                beanFactory.registerSingleton(beanPrefix+entity.getId(), entity);
+                entityRepository.create(entity);
             }
         }
         catch (IOException e)
         {
-            throw new RuntimeException("Error loading trainees from JSON", e);
+            throw new RuntimeException("Error loading objects of class (" + getEntityClass().getName() + ") from JSON", e);
         }
-    }
-
-    protected Map<Id, Entity> entities(List<Entity> entities)
-    {
-        return entities.stream().collect(Collectors.toMap(Entity::getId, entity -> entity));
     }
 }

@@ -1,11 +1,10 @@
 package com.crm.gym.entities;
 
-import java.time.LocalDate;
-import com.crm.gym.repositories.interfaces.Identifiable;
-
 import lombok.Data;
+import java.time.LocalDate;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.crm.gym.repositories.interfaces.Identifiable;
 
 @Data
 @NoArgsConstructor

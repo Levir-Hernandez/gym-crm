@@ -1,9 +1,8 @@
 package com.crm.gym.factories;
 
-import org.springframework.stereotype.Component;
-
 import com.crm.gym.util.IdGenerator;
 import com.crm.gym.entities.TrainingType;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TrainingTypeFactory implements TemplateFactory<Long, TrainingType>

@@ -4,5 +4,5 @@ import com.crm.gym.entities.Trainee;
 
 public interface TraineeRepository extends TemplateRepository<Long, Trainee>
 {
-
+    long countByUsernameLike(String username);
 }

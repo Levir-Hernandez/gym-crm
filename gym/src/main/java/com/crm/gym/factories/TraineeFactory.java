@@ -1,12 +1,11 @@
 package com.crm.gym.factories;
 
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDate;
-import com.crm.gym.util.IdGenerator;
 import com.crm.gym.entities.Trainee;
+import com.crm.gym.util.IdGenerator;
 import com.crm.gym.util.PasswordGenerator;
 import com.crm.gym.util.UsernameGenerator;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TraineeFactory implements TemplateFactory<Long, Trainee>

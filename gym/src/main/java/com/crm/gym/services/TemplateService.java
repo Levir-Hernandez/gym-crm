@@ -1,9 +1,8 @@
 package com.crm.gym.services;
 
+import java.util.List;
 import com.crm.gym.repositories.interfaces.Identifiable;
 import com.crm.gym.repositories.interfaces.TemplateRepository;
-
-import java.util.List;
 
 public abstract class TemplateService<Id,
         Entity extends Identifiable<Id>,
@@ -21,9 +20,9 @@ public abstract class TemplateService<Id,
         repository.create(entity);
     }
 
-    protected void updateEntity(Entity entity)
+    protected void updateEntity(Id entityId, Entity entity)
     {
-        repository.update(entity);
+        repository.update(entityId, entity);
     }
 
     protected void deleteEntity(Id entityId)

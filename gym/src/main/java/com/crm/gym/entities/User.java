@@ -3,7 +3,6 @@ package com.crm.gym.entities;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
 import com.crm.gym.repositories.interfaces.Identifiable;
 
 @Data

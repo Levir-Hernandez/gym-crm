@@ -3,7 +3,6 @@ package com.crm.gym.controllers;
 import java.util.List;
 import com.crm.gym.entities.Trainee;
 import com.crm.gym.services.TraineeService;
-
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -38,8 +37,7 @@ public class TraineeController
     @PutMapping("/{id}")
     public void updateTraineeById(@PathVariable Long id, @RequestBody Trainee trainee)
     {
-        trainee.setId(id);
-        traineeService.updateEntity(trainee);
+        traineeService.updateEntity(id, trainee);
     }
 
     @DeleteMapping("/{id}")

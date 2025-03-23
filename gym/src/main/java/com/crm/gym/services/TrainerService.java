@@ -14,8 +14,8 @@ public class TrainerService extends TemplateService<Long, Trainer, TrainerReposi
     }
 
     @Override
-    public void updateEntity(Trainer trainer)
+    public void updateEntity(Long idTrainer, Trainer trainer)
     {
-        super.updateEntity(trainer);
+        super.updateEntity(idTrainer, trainer);
     }
 }

@@ -1,10 +1,9 @@
 package com.crm.gym.controllers;
 
+import java.util.List;
 import com.crm.gym.entities.Trainer;
 import com.crm.gym.services.TrainerService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/trainer")
@@ -38,7 +37,6 @@ public class TrainerController
     @PutMapping("/{id}")
     public void updateTrainerById(@PathVariable Long id, @RequestBody Trainer trainer)
     {
-        trainer.setId(id);
-        trainerService.updateEntity(trainer);
+        trainerService.updateEntity(id, trainer);
     }
 }
