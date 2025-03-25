@@ -3,18 +3,18 @@
     "firstname": "John",
     "lastname": "Doe",
     "isActive": true,
-    "specialization": "Certified Strength Coach"
+    "specialization": 1
   },
   {
     "firstname": "Jane",
     "lastname": "Smith",
     "isActive": true,
-    "specialization": "Certified Cardio Trainer"
+    "specialization": 2
   },
   {
     "firstname": "Mike",
     "lastname": "Johnson",
     "isActive": true,
-    "specialization": "Certified Flexibility & Mobility Specialist"
+    "specialization": 3
   }
 ]

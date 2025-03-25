@@ -15,19 +15,19 @@ public abstract class TemplateService<Id,
         this.repository = repository;
     }
 
-    public void saveEntity(Entity entity)
+    public Entity saveEntity(Entity entity)
     {
-        repository.create(entity);
+        return repository.create(entity);
     }
 
-    protected void updateEntity(Id entityId, Entity entity)
+    protected Entity updateEntity(Id entityId, Entity entity)
     {
-        repository.update(entityId, entity);
+        return repository.update(entityId, entity);
     }
 
-    protected void deleteEntity(Id entityId)
+    protected Entity deleteEntity(Id entityId)
     {
-        repository.delete(entityId);
+        return repository.delete(entityId);
     }
 
     public Entity getEntityById(Id entityId)

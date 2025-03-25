@@ -23,27 +23,30 @@ public abstract class TemplateDao<Id, Entity extends Identifiable<Id>>
     }
 
     @Override
-    public void create(Entity entity)
+    public Entity create(Entity entity)
     {
         entity = templateFactory.recreate(entity);
         entities.put(entity.getId(), entity);
+        return entity;
     }
 
     @Override
-    public void update(Id entityId, Entity entity)
+    public Entity update(Id entityId, Entity entity)
     {
         if(existsById(entityId))
         {
             entity.setId(entityId);
             entities.put(entityId, entity);
         }
-        //else {} // Handle exception for a non-existent entity or use create() instead.
+        else {entity = null;}
+
+        return entity;
     }
 
     @Override
-    public void delete(Id entityId)
+    public Entity delete(Id entityId)
     {
-        entities.remove(entityId);
+        return entities.remove(entityId);
     }
 
     @Override

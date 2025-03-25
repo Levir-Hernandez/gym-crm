@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class Trainer extends User
 {
-    private String specialization;
+    private Long specialization;
 
-    public Trainer(Long id, String firstname, String lastname, String username, String password, Boolean isActive, String specialization)
+    public Trainer(Long id, String firstname, String lastname, String username, String password, Boolean isActive, Long specialization)
     {
         super(id, firstname, lastname, username, password, isActive);
         this.specialization = specialization;

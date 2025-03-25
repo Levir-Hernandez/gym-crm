@@ -21,7 +21,7 @@ public class TrainerFactory implements TemplateFactory<Long, Trainer>
     }
 
     public Trainer create(String firstname, String lastname, Boolean isActive,
-                                 String specialization)
+                                 Long specialization)
     {
         Trainer trainer = new Trainer(idGenerator.generateId(),
                 firstname, lastname,

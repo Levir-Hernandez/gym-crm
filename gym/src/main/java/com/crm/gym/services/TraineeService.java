@@ -14,14 +14,14 @@ public class TraineeService extends TemplateService<Long, Trainee, TraineeReposi
     }
 
     @Override
-    public void updateEntity(Long idTrainee, Trainee trainee)
+    public Trainee updateEntity(Long idTrainee, Trainee trainee)
     {
-        super.updateEntity(idTrainee, trainee);
+        return super.updateEntity(idTrainee, trainee);
     }
 
     @Override
-    public void deleteEntity(Long entityId)
+    public Trainee deleteEntity(Long entityId)
     {
-        super.deleteEntity(entityId);
+        return super.deleteEntity(entityId);
     }
 }
