@@ -1,9 +1,12 @@
 package com.crm.gym.util;
 
-import lombok.Setter;
+import java.util.Collection;
+import java.util.stream.Stream;
 import com.crm.gym.entities.User;
 import com.crm.gym.repositories.interfaces.TraineeRepository;
 import com.crm.gym.repositories.interfaces.TrainerRepository;
+
+import lombok.Setter;
 
 public class UsernameGeneratorImpl implements UsernameGenerator
 {
@@ -23,7 +26,16 @@ public class UsernameGeneratorImpl implements UsernameGenerator
     {
         String username = user.getFirstname() + "." + user.getLastname();
 
-        long counter = traineeRepository.countByUsernameLike(username) + trainerRepository.countByUsernameLike(username);
+        final String prefix = username;
+        long counter = Stream.of(traineeRepository, trainerRepository)
+                .map(r -> r.findByUsernameStartsWith(prefix))
+                .flatMap(Collection::stream).map(User::getUsername) // Fetch all Users that collide with the username
+                .map(fullUsername -> fullUsername.substring(prefix.length())) // Extract its numeric suffix
+                .map(suffix -> "0"+suffix).map(Long::parseLong) // Handle empty suffix as zero
+                .max(Long::compareTo)
+                .map(maxSuffix -> maxSuffix+1) // If collisions exist (counter = maxSuffix + 1)
+                .orElse(0L); // If no collisions (counter = 0)
+
         if(counter > 0){username += counter;}
 
         return username;

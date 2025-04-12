@@ -2,7 +2,6 @@ package com.crm.gym.factories;
 
 import java.time.LocalDate;
 import com.crm.gym.entities.Trainee;
-import com.crm.gym.util.IdGenerator;
 import com.crm.gym.util.PasswordGenerator;
 import com.crm.gym.util.UsernameGenerator;
 import org.springframework.stereotype.Component;
@@ -10,13 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class TraineeFactory implements TemplateFactory<Long, Trainee>
 {
-    private IdGenerator<Long> idGenerator;
     private UsernameGenerator usernameGenerator;
     private PasswordGenerator passwordGenerator;
 
-    public TraineeFactory(IdGenerator<Long> idGenerator, UsernameGenerator usernameGenerator, PasswordGenerator passwordGenerator)
+    public TraineeFactory(UsernameGenerator usernameGenerator, PasswordGenerator passwordGenerator)
     {
-        this.idGenerator = idGenerator;
         this.usernameGenerator = usernameGenerator;
         this.passwordGenerator = passwordGenerator;
     }
@@ -24,7 +21,7 @@ public class TraineeFactory implements TemplateFactory<Long, Trainee>
     public Trainee create(String firstname, String lastname, Boolean isActive,
                                  LocalDate birthdate, String address)
     {
-        Trainee trainee = new Trainee(idGenerator.generateId(),
+        Trainee trainee = new Trainee(null, // will be set by JPA
                 firstname, lastname,
                 null,
                 passwordGenerator.generatePassword(),

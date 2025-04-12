@@ -5,8 +5,10 @@ import com.crm.gym.repositories.interfaces.TrainerRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
-public class TrainerService extends TemplateService<Long, Trainer, TrainerRepository>
+public class TrainerService extends UserService<Trainer, TrainerRepository>
 {
     public TrainerService(TrainerRepository repository)
     {
@@ -17,5 +19,10 @@ public class TrainerService extends TemplateService<Long, Trainer, TrainerReposi
     public Trainer updateEntity(Long idTrainer, Trainer trainer)
     {
         return super.updateEntity(idTrainer, trainer);
+    }
+
+    public List<Trainer> getAllUnassignedForTraineeByUsername(String username)
+    {
+        return repository.findAllUnassignedForTraineeByUsername(username);
     }
 }

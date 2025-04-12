@@ -1,15 +1,20 @@
 package com.crm.gym.repositories.interfaces;
 
-import java.util.List;
+import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.NoRepositoryBean;
 
+import java.util.Optional;
+
+@NoRepositoryBean
 public interface TemplateRepository<Id, Entity extends Identifiable<Id>>
+        extends PreprocessingRepository<Id, Entity>, JpaRepository<Entity, Id>
 {
-    Entity create(Entity entity);
-    Entity update(Id entityId, Entity entity);
-    Entity delete(Id entityId);
-
-    Entity findById(Id entityId);
-    List<Entity> findAll();
-
-    boolean existsById(Id entityId);
+    @Transactional
+    default boolean deleteIfExists(Id entityId)
+    {
+        Optional<Entity> deletableEntity = findById(entityId);
+        deletableEntity.ifPresent(e -> deleteById(entityId));
+        return deletableEntity.isPresent();
+    }
 }

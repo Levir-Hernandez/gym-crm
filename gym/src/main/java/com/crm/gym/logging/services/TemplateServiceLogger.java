@@ -9,7 +9,7 @@ import java.util.Objects;
 
 public abstract class TemplateServiceLogger<Id, Entity extends Identifiable<Id>>
 {
-    private final Logger logger;
+    protected final Logger logger;
     private final String IDENTIFIABLE = "com.crm.gym.repositories.interfaces.Identifiable";
 
     public TemplateServiceLogger(Logger logger)
@@ -32,7 +32,7 @@ public abstract class TemplateServiceLogger<Id, Entity extends Identifiable<Id>>
     @Pointcut("execution("+IDENTIFIABLE+" updateEntity(Object," + IDENTIFIABLE + "))")
     public void updateEntity() {}
 
-    @Pointcut("execution("+IDENTIFIABLE+" deleteEntity(Object))")
+    @Pointcut("execution(boolean deleteEntity(Object))")
     public void deleteEntity() {}
 
     @Pointcut("execution("+IDENTIFIABLE+" getEntityById(Object))")
@@ -50,50 +50,55 @@ public abstract class TemplateServiceLogger<Id, Entity extends Identifiable<Id>>
         return entity;
     }
 
+    @Around("target_EntityService() && within_TemplateServiceSubclasses() && getEntityById()")
+    public Entity around_getEntityById(ProceedingJoinPoint jp) throws Throwable
+    {
+        return around_getEntity(jp);
+    }
+
     protected Entity around_updateEntity(ProceedingJoinPoint jp) throws Throwable
     {
         Object[] args = jp.getArgs();
-        Object id = args[0];
+        Object field = args[0];
 
-        logger.info("Updating {} {}", getEntityClass().getSimpleName(), id);
+        logger.info("Updating {} {}", getEntityClass().getSimpleName(), field);
         Entity entity = (Entity) jp.proceed(args);
 
         if(Objects.nonNull(entity))
         {
-            logger.info("{} {} updated", getEntityClass().getSimpleName(), entity.getId());
+            logger.info("{} {} updated", getEntityClass().getSimpleName(), field);
         }
 
         return entity;
     }
 
-    protected Entity around_deleteEntity(ProceedingJoinPoint jp) throws Throwable
+    protected boolean around_deleteEntity(ProceedingJoinPoint jp) throws Throwable
     {
         Object[] args = jp.getArgs();
-        Object id = args[0];
+        Object field = args[0];
 
-        logger.info("Deleting {} {}", getEntityClass().getSimpleName(), id);
-        Entity entity = (Entity) jp.proceed(args);
+        logger.info("Deleting {} {}", getEntityClass().getSimpleName(), field);
 
-        if(Objects.nonNull(entity))
+        boolean deleted = (boolean) jp.proceed(args);
+        if(deleted)
         {
-            logger.info("{} {} deleted", getEntityClass().getSimpleName(), entity.getId());
+            logger.info("{} {} deleted", getEntityClass().getSimpleName(), field);
         }
 
-        return entity;
+        return deleted;
     }
 
-    @Around("target_EntityService() && within_TemplateServiceSubclasses() && getEntityById()")
-    protected Entity around_getEntityById(ProceedingJoinPoint jp) throws Throwable
+    protected Entity around_getEntity(ProceedingJoinPoint jp) throws Throwable
     {
         Object[] args = jp.getArgs();
-        Object id = args[0];
+        Object field = args[0];
 
-        logger.info("Searching {} {}", getEntityClass().getSimpleName(), id);
+        logger.info("Searching {} {}", getEntityClass().getSimpleName(), field);
+
         Entity entity = (Entity) jp.proceed(args);
-
         if(Objects.nonNull(entity))
         {
-            logger.info("{} {} retrieved", getEntityClass().getSimpleName(), entity.getId());
+            logger.info("{} {} retrieved", getEntityClass().getSimpleName(), field);
         }
 
         return entity;

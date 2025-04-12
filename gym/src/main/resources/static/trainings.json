@@ -1,26 +1,50 @@
 [
   {
-    "name": "Strength Basics",
+    "name": "Full Body Fitness",
     "date": "2025-06-07",
     "duration": 60,
-    "traineeId": 1,
-    "trainerId": 1,
-    "trainingTypeId": 1
+    "trainee": 1,
+    "trainer": 6,
+    "trainingType": 1
   },
   {
-    "name": "Cardio Blast",
+    "name": "HIIT Strength",
     "date": "2025-06-15",
-    "duration": 45,
-    "traineeId": 2,
-    "trainerId": 2,
-    "trainingTypeId": 2
+    "duration": 55,
+    "trainee": 1,
+    "trainer": 6,
+    "trainingType": 1
   },
   {
-    "name": "Flexibility Flow",
+    "name": "Morning Yoga Flow",
     "date": "2025-06-21",
+    "duration": 45,
+    "trainee": 1,
+    "trainer": 7,
+    "trainingType": 2
+  },
+  {
+    "name": "Zumba Party",
+    "date": "2025-06-25",
     "duration": 30,
-    "traineeId": 3,
-    "trainerId": 3,
-    "trainingTypeId": 3
+    "trainee": 3,
+    "trainer": 9,
+    "trainingType": 3
+  },
+  {
+    "name": "Deep Stretch Session",
+    "date": "2025-07-05",
+    "duration": 50,
+    "trainee": 4,
+    "trainer": 10,
+    "trainingType": 4
+  },
+  {
+    "name": "Stretch & Recover",
+    "date": "2025-07-10",
+    "duration": 35,
+    "trainee": 5,
+    "trainer": 10,
+    "trainingType": 4
   }
 ]

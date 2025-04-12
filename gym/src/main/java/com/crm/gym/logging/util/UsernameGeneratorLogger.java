@@ -23,6 +23,4 @@ public class UsernameGeneratorLogger
         //username = "*".repeat(username.length());
         logger.debug("Generated new username: {}", username);
     }
-
-    // add ERROR to User firstname or lastname in null case
 }

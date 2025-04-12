@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -46,7 +48,7 @@ class TrainerServiceTest
     @DisplayName("Should update existing Trainer")
     void updateEntity()
     {
-        Long id = 1L;
+        Long id = 11L;
         Trainer newTrainerInfo = new Trainer(null,
                 "Larry", "Williams",
                 "Willy", "secret1234",
@@ -64,7 +66,7 @@ class TrainerServiceTest
     }
 
     @Test
-    @DisplayName("Should not update existing Trainer")
+    @DisplayName("Should not update non existing Trainer")
     void updateEntity2()
     {
         int totalTrainers = trainerService.getAllEntities().size();
@@ -81,6 +83,51 @@ class TrainerServiceTest
         trainerService.updateEntity(id, newTrainerInfo);
 
         Trainer newTrainer = trainerService.getEntityById(id);
+        assertNull(newTrainer);
+
+        int actualTrainers = trainerService.getAllEntities().size();
+        assertEquals(totalTrainers, actualTrainers);
+    }
+
+    @Test
+    @DisplayName("Should update existing Trainer by username")
+    void updateUserByUsername()
+    {
+        String username = "Larry.Williams";
+        Trainer newTrainerInfo = new Trainer(null,
+                "Larry", "Williams",
+                "Willy", "secret1234",
+                false, null);
+
+        Trainer oldTrainer = trainerService.getUserByUsername(username);
+
+        assertNotEquals(newTrainerInfo, oldTrainer);
+
+        trainerService.updateUserByUsername(username, newTrainerInfo);
+        Trainer newTrainer = trainerService.getUserByUsername(username);
+
+        assertNotEquals(oldTrainer, newTrainer);
+        assertEquals(newTrainerInfo, newTrainer);
+    }
+
+    @Test
+    @DisplayName("Should not update non existing Trainer by username")
+    void updateUserByUsername2()
+    {
+        int totalTrainers = trainerService.getAllEntities().size();
+        String username = "Unknown.Unknown";
+
+        Trainer newTrainerInfo = new Trainer(null,
+                "Larry", "Williams",
+                "Willy", "secret1234",
+                false, null);
+
+        Trainer oldTrainer = trainerService.getUserByUsername(username);
+        assertNull(oldTrainer);
+
+        trainerService.updateUserByUsername(username, newTrainerInfo);
+
+        Trainer newTrainer = trainerService.getUserByUsername(username);
         assertNull(newTrainer);
 
         int actualTrainers = trainerService.getAllEntities().size();
@@ -115,9 +162,96 @@ class TrainerServiceTest
         assertNull(trainer);
     }
 
-//    @Test
-//    void getAllEntities()
-//    {
-//
-//    }
+    @Test
+    @DisplayName("Should retrieve an existent Trainer by username")
+    void getUserByUsername1()
+    {
+        Trainer trainerExpected = trainerService.getEntityById(6L);
+
+        String username = "John.Doe";
+        Trainer trainerActual = trainerService.getUserByUsername(username);
+
+        assertEquals(trainerExpected, trainerActual);
+    }
+
+    @Test
+    @DisplayName("Should return null for non existent Trainer by username")
+    void getUserByUsername2()
+    {
+        String username = "Unknown.Unknown";
+        Trainer trainer = trainerService.getUserByUsername(username);
+        assertNull(trainer);
+    }
+
+    @Test
+    @DisplayName("Should activate an inactive Trainer by username")
+    void activateUser()
+    {
+        Trainer trainer = trainerService.getUserByUsername("Tom.Anderson");
+        assertFalse(trainer.getIsActive());
+
+        trainerService.activateUser("Tom.Anderson");
+
+        trainer = trainerService.getUserByUsername("Tom.Anderson");
+        assertTrue(trainer.getIsActive());
+    }
+
+    @Test
+    @DisplayName("Should deactivate an active Trainer by username")
+    void deactivateUser()
+    {
+        Trainer trainer = trainerService.getUserByUsername("Tom.Anderson");
+        assertTrue(trainer.getIsActive());
+
+        trainerService.deactivateUser("Tom.Anderson");
+
+        trainer = trainerService.getUserByUsername("Tom.Anderson");
+        assertFalse(trainer.getIsActive());
+    }
+
+    @Test
+    @DisplayName("Should login return true when username and password match")
+    void login()
+    {
+        String username = "John.Doe";
+        Trainer trainer = trainerService.getUserByUsername(username);
+        String password = trainer.getPassword();
+
+        boolean logged = trainerService.login(username, password);
+
+        assertTrue(logged);
+    }
+
+    @Test
+    @DisplayName("Should login return false when username or password is incorrect")
+    void login2()
+    {
+        String username = "John.Doe";
+        Trainer trainer = trainerService.getUserByUsername(username);
+        String password = trainer.getPassword();
+
+        boolean logged;
+
+        logged = trainerService.login("Unknown.Unknown", password);
+        assertFalse(logged);
+
+        logged = trainerService.login(username, "regularPassword");
+        assertFalse(logged);
+    }
+
+    @Test
+    @DisplayName("Should retrieve active Trainers unassigned to the given Trainee")
+    void getAllUnassignedForTraineeByUsername()
+    {
+        String username = "Alice.Smith";
+
+        List<Trainer> expectedUnassignedTrainers = List.of(
+                trainerService.getUserByUsername("Mike.Johnson"),
+                trainerService.getUserByUsername("Laura.Williams")
+        );
+
+        List<Trainer> actualUnassignedTrainers = trainerService.getAllUnassignedForTraineeByUsername(username);
+
+        assertEquals(expectedUnassignedTrainers, actualUnassignedTrainers);
+    }
 }

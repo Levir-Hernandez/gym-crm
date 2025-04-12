@@ -15,6 +15,18 @@
     "firstname": "Mike",
     "lastname": "Johnson",
     "isActive": true,
+    "specialization": 2
+  },
+  {
+    "firstname": "Laura",
+    "lastname": "Williams",
+    "isActive": true,
     "specialization": 3
+  },
+  {
+    "firstname": "Tom",
+    "lastname": "Anderson",
+    "isActive": false,
+    "specialization": 4
   }
 ]

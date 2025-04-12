@@ -1,7 +1,6 @@
 package com.crm.gym.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 
@@ -15,13 +14,6 @@ import java.util.Random;
 @Configuration
 public class UtilConfig
 {
-    @Bean
-    @Scope("prototype")
-    public IdGenerator<Long> idGenerator()
-    {
-        return new IdGeneratorImpl(1L);
-    }
-
     @Bean
     public UsernameGenerator usernameGenerator(@Lazy TraineeRepository traineeRepository,
                                                @Lazy TrainerRepository trainerRepository)

@@ -8,7 +8,7 @@ public abstract class TemplateService<Id,
         Entity extends Identifiable<Id>,
         Repository extends TemplateRepository<Id,Entity>>
 {
-    private Repository repository;
+    protected Repository repository;
 
     public TemplateService(Repository repository)
     {
@@ -25,14 +25,14 @@ public abstract class TemplateService<Id,
         return repository.update(entityId, entity);
     }
 
-    protected Entity deleteEntity(Id entityId)
+    protected boolean deleteEntity(Id entityId)
     {
-        return repository.delete(entityId);
+        return repository.deleteIfExists(entityId);
     }
 
     public Entity getEntityById(Id entityId)
     {
-        return repository.findById(entityId);
+        return repository.findById(entityId).orElse(null);
     }
 
     public List<Entity> getAllEntities()

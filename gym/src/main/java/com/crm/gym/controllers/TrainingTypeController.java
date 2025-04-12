@@ -2,35 +2,35 @@ package com.crm.gym.controllers;
 
 import java.util.List;
 import com.crm.gym.entities.TrainingType;
-import com.crm.gym.repositories.daos.TrainingTypeDao;
+import com.crm.gym.repositories.interfaces.TrainingTypeRepository;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/trainingType")
+@RequestMapping("/trainingTypes")
 public class TrainingTypeController
 {
-    TrainingTypeDao trainingTypeDao;
+    TrainingTypeRepository trainingTypeRepository;
 
-    public TrainingTypeController(TrainingTypeDao trainingTypeDao)
+    public TrainingTypeController(TrainingTypeRepository trainingTypeRepository)
     {
-        this.trainingTypeDao = trainingTypeDao;
+        this.trainingTypeRepository = trainingTypeRepository;
+    }
+
+    @PostMapping
+    public void createTrainingType(@RequestBody TrainingType trainingType)
+    {
+        trainingTypeRepository.create(trainingType);
+    }
+
+    @GetMapping
+    public List<TrainingType> getAllTrainingTypes()
+    {
+        return trainingTypeRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public TrainingType getTrainingById(@PathVariable Long id)
     {
-        return trainingTypeDao.findById(id);
-    }
-
-    @GetMapping("/all")
-    public List<TrainingType> getAllTrainingTypes()
-    {
-        return trainingTypeDao.findAll();
-    }
-
-    @PostMapping("/new")
-    public void createTrainingType(@RequestBody TrainingType trainingType)
-    {
-        trainingTypeDao.create(trainingType);
+        return trainingTypeRepository.findById(id).orElse(null);
     }
 }

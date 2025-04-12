@@ -1,6 +1,7 @@
 package com.crm.gym.services;
 
 import com.crm.gym.entities.Training;
+import com.crm.gym.repositories.TrainingQueryCriteria;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,9 +70,26 @@ class TrainingServiceTest
         assertNull(training);
     }
 
-//    @Test
-//    void getAllEntities()
-//    {
-//
-//    }
+    @Test
+    @DisplayName("Should retrieve existing trainings by criteria")
+    void getTrainingsByCriteria()
+    {
+        List<Training> expectedTrainings = List.of(
+                trainingService.getEntityById(1L),
+                trainingService.getEntityById(2L)
+        );
+
+        TrainingQueryCriteria criteria = TrainingQueryCriteria.builder()
+                .traineeUsername("Alice.Smith")
+                .trainerUsername("John.Doe")
+                .fromDate(LocalDate.parse("2025-06-07"))
+                .toDate(LocalDate.parse("2025-06-15"))
+                .trainingTypeName("Fitness")
+                .build();
+
+        List<Training> actualTrainings = trainingService.getTrainingsByCriteria(criteria);
+
+        assertEquals(expectedTrainings.size(), actualTrainings.size());
+        assertEquals(expectedTrainings, actualTrainings);
+    }
 }

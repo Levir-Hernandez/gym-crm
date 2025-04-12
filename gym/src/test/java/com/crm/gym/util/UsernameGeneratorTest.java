@@ -49,7 +49,7 @@ class UsernameGeneratorTest
     void generateUsername2()
     {
         Trainee trainee = new Trainee(null,
-                "Laura", "Williams",
+                "Clarice", "Starling",
                 null, null,
                 true, LocalDate.parse("1991-03-21"), "123 Harlem St");
         String expectedUsername = trainee.getFirstname() + "." + trainee.getLastname();
@@ -75,7 +75,7 @@ class UsernameGeneratorTest
     void generateUsername3()
     {
         Trainee trainee = new Trainee(null,
-                "Laura", "Williams",
+                "Clarice", "Starling",
                 null, null,
                 true, LocalDate.parse("1991-03-21"), "123 Harlem St");
         String expectedUsername = trainee.getFirstname() + "." + trainee.getLastname();
@@ -91,7 +91,7 @@ class UsernameGeneratorTest
         assertEquals(expectedUsername+"1", actualUsername);
 
         Trainer trainer = new Trainer(null,
-                "Laura", "Williams",
+                "Clarice", "Starling",
                 null, null,
                 true, null);
 

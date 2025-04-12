@@ -1,6 +1,7 @@
 package com.crm.gym.services;
 
 import com.crm.gym.entities.Trainee;
+import com.crm.gym.entities.Trainer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,11 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class TraineeServiceTest
 {
     private TraineeService traineeService;
+    private TrainerService trainerService;
 
     @Autowired
-    public TraineeServiceTest(TraineeService traineeService)
+    public TraineeServiceTest(TraineeService traineeService, TrainerService trainerService)
     {
         this.traineeService = traineeService;
+        this.trainerService = trainerService;
     }
 
     @Test
@@ -48,7 +52,7 @@ class TraineeServiceTest
     @DisplayName("Should update existing Trainee")
     void updateEntity()
     {
-        Long id = 1L;
+        Long id = 11L;
         Trainee newTraineeInfo = new Trainee(null,
                 "Larry", "Williams",
                 "Willy", "secret1234",
@@ -66,7 +70,7 @@ class TraineeServiceTest
     }
 
     @Test
-    @DisplayName("Should not update existing Trainee")
+    @DisplayName("Should not update non existing Trainee")
     void updateEntity2()
     {
         int totalTrainees = traineeService.getAllEntities().size();
@@ -90,10 +94,55 @@ class TraineeServiceTest
     }
 
     @Test
+    @DisplayName("Should update existing Trainee by username")
+    void updateUserByUsername()
+    {
+        String username = "Larry.Williams";
+        Trainee newTraineeInfo = new Trainee(null,
+                "Larry", "Williams",
+                "Willy", "secret1234",
+                false, LocalDate.parse("1991-03-21"), "123 Harlem St");
+
+        Trainee oldTrainee = traineeService.getUserByUsername(username);
+
+        assertNotEquals(newTraineeInfo, oldTrainee);
+
+        traineeService.updateUserByUsername(username, newTraineeInfo);
+        Trainee newTrainee = traineeService.getUserByUsername(username);
+
+        assertNotEquals(oldTrainee, newTrainee);
+        assertEquals(newTraineeInfo, newTrainee);
+    }
+
+    @Test
+    @DisplayName("Should not update non existing Trainee by username")
+    void updateUserByUsername2()
+    {
+        int totalTrainees = traineeService.getAllEntities().size();
+        String username = "Unknown.Unknown";
+
+        Trainee newTraineeInfo = new Trainee(null,
+                "Larry", "Williams",
+                "Willy", "secret1234",
+                false, LocalDate.parse("1991-03-21"), "123 Harlem St");
+
+        Trainee oldTrainee = traineeService.getUserByUsername(username);
+        assertNull(oldTrainee);
+
+        traineeService.updateUserByUsername(username, newTraineeInfo);
+
+        Trainee newTrainee = traineeService.getUserByUsername(username);
+        assertNull(newTrainee);
+
+        int actualTrainees = traineeService.getAllEntities().size();
+        assertEquals(totalTrainees, actualTrainees);
+    }
+
+    @Test
     @DisplayName("Should delete existing Trainee")
     void deleteEntity()
     {
-        Long id = 1L;
+        Long id = 5L;
 
         Trainee trainee = traineeService.getEntityById(id);
         assertNotNull(trainee);
@@ -117,6 +166,40 @@ class TraineeServiceTest
         traineeService.deleteEntity(id);
 
         trainee = traineeService.getEntityById(id);
+        assertNull(trainee);
+
+        int actualTrainees = traineeService.getAllEntities().size();
+        assertEquals(totalTrainees, actualTrainees);
+    }
+
+    @Test
+    @DisplayName("Should delete existing Trainee by username")
+    void deleteTraineeByUsername()
+    {
+        String username = "Bob.Johnson";
+
+        Trainee trainee = traineeService.getUserByUsername(username);
+        assertNotNull(trainee);
+
+        traineeService.deleteTraineeByUsername(username);
+
+        trainee = traineeService.getUserByUsername(username);
+        assertNull(trainee);
+    }
+
+    @Test
+    @DisplayName("Should not delete non existing Trainee by username")
+    void deleteTraineeByUsername2()
+    {
+        int totalTrainees = traineeService.getAllEntities().size();
+        String username = "Unknown.Unknown";
+
+        Trainee trainee = traineeService.getUserByUsername(username);
+        assertNull(trainee);
+
+        traineeService.deleteTraineeByUsername(username);
+
+        trainee = traineeService.getUserByUsername(username);
         assertNull(trainee);
 
         int actualTrainees = traineeService.getAllEntities().size();
@@ -151,9 +234,107 @@ class TraineeServiceTest
         assertNull(trainee);
     }
 
-//    @Test
-//    void getAllEntities()
-//    {
-//
-//    }
+    @Test
+    @DisplayName("Should retrieve an existent Trainee by username")
+    void getUserByUsername1()
+    {
+        Trainee traineeExpected = traineeService.getEntityById(3L);
+
+        String username = "Charlie.Brown";
+        Trainee traineeActual = traineeService.getUserByUsername(username);
+
+        assertEquals(traineeExpected, traineeActual);
+    }
+
+    @Test
+    @DisplayName("Should return null for non existent Trainee by username")
+    void getUserByUsername2()
+    {
+        String username = "Unknown.Unknown";
+        Trainee trainee = traineeService.getUserByUsername(username);
+        assertNull(trainee);
+    }
+
+    @Test
+    @DisplayName("Should activate an inactive Trainee by username")
+    void activateUser()
+    {
+        Trainee trainee = traineeService.getUserByUsername("Ethan.Davis");
+        assertFalse(trainee.getIsActive());
+
+        traineeService.activateUser("Ethan.Davis");
+
+        trainee = traineeService.getUserByUsername("Ethan.Davis");
+        assertTrue(trainee.getIsActive());
+    }
+
+    @Test
+    @DisplayName("Should deactivate an active Trainee by username")
+    void deactivateUser()
+    {
+        Trainee trainee = traineeService.getUserByUsername("Charlie.Brown");
+        assertTrue(trainee.getIsActive());
+
+        traineeService.deactivateUser("Charlie.Brown");
+
+        trainee = traineeService.getUserByUsername("Charlie.Brown");
+        assertFalse(trainee.getIsActive());
+    }
+
+    @Test
+    @DisplayName("Should login return true when username and password match")
+    void login()
+    {
+        String username = "Charlie.Brown";
+        Trainee trainee = traineeService.getUserByUsername(username);
+        String password = trainee.getPassword();
+
+        boolean logged = traineeService.login(username, password);
+
+        assertTrue(logged);
+    }
+
+    @Test
+    @DisplayName("Should login return false when username or password is incorrect")
+    void login2()
+    {
+        String username = "Charlie.Brown";
+        Trainee trainee = traineeService.getUserByUsername(username);
+        String password = trainee.getPassword();
+
+        boolean logged;
+
+        logged = traineeService.login("Unknown.Unknown", password);
+        assertFalse(logged);
+
+        logged = traineeService.login(username, "regularPassword");
+        assertFalse(logged);
+    }
+
+    @Test
+    @DisplayName("Should update multiple Trainers assigned to a Trainee")
+    public void updateAssignedTrainersForTrainee()
+    {
+        String username = "Alice.Smith";
+        System.out.println(traineeService.getUserByUsername(username));
+        Trainer trainer1, trainer2;
+
+        trainer1 = trainerService.getUserByUsername("John.Doe");
+        trainer2 = trainerService.getUserByUsername("Jane.Smith");
+
+        assertNotEquals("Johnny", trainer1.getFirstname());
+        assertNotEquals("Jennette", trainer2.getFirstname());
+
+        trainer1.setFirstname("Johnny");
+        trainer2.setFirstname("Jennette");
+
+        Set<Trainer> trainersToUpdate = Set.of(trainer1, trainer2);
+        traineeService.updateAssignedTrainersForTrainee(username, trainersToUpdate);
+
+        trainer1 = trainerService.getUserByUsername("John.Doe");
+        trainer2 = trainerService.getUserByUsername("Jane.Smith");
+
+        assertEquals("Johnny", trainer1.getFirstname());
+        assertEquals("Jennette", trainer2.getFirstname());
+    }
 }

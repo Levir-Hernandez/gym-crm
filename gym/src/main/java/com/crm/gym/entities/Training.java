@@ -1,24 +1,38 @@
 package com.crm.gym.entities;
 
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDate;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import com.crm.gym.repositories.interfaces.Identifiable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
+@Entity
+@Table(name="trainings")
 public class Training implements Identifiable<Long>
 {
+    @Id @GeneratedValue
     private Long id;
+
     private String name;
     private LocalDate date;
     private Integer duration;
 
-    private Long traineeId;
-    private Long trainerId;
-    private Long trainingTypeId;
+    @ManyToOne
+    @JoinColumn(name = "trainee_fk")
+    private Trainee trainee;
 
-    @Override public Long getId() {return id;}
+    @ManyToOne
+    @JoinColumn(name = "trainer_fk")
+    private Trainer trainer;
+
+    @ManyToOne
+    @JoinColumn(name = "training_type_fk")
+    private TrainingType trainingType;
+
+    public Training(Long id) {this.id = id;}
 }

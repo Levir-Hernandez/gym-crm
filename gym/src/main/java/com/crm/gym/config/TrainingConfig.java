@@ -7,8 +7,10 @@ import jakarta.annotation.PostConstruct;
 import com.crm.gym.repositories.interfaces.TrainingRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.crm.gym.entities.Training;
+import org.springframework.context.annotation.DependsOn;
 
 @Configuration
+@DependsOn({"traineeConfig", "trainerConfig"})
 public class TrainingConfig extends TemplateConfig<Long, Training>
 {
     public TrainingConfig(ObjectMapper mapper,

@@ -2,34 +2,24 @@ package com.crm.gym.logging.factories;
 
 import com.crm.gym.entities.Trainee;
 import com.crm.gym.factories.TraineeFactory;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
-public class TraineeFactoryLogger
+public class TraineeFactoryLogger extends TemplateFactoryLogger<Long, Trainee>
 {
-    private final Logger logger = LoggerFactory.getLogger(TraineeFactory.class);
-
-    private final String TRAINEE = "com.crm.gym.entities.Trainee";
-
-    @Pointcut("within(com.crm.gym.factories.TraineeFactory) && execution("+TRAINEE+" recreate("+TRAINEE+"))")
-    public void recreate(){}
-
-    @AfterReturning(pointcut = "recreate()", returning = "trainee")
-    public void afterReturning_recreate(Trainee trainee)
+    public TraineeFactoryLogger()
     {
-        String username = trainee.getUsername();
-        String password = trainee.getPassword();
-
-        //username = "*".repeat(username.length());
-        //password = "*".repeat(password.length());
-
-        logger.info("Generated Trainee (id:{}, username:{}, password:{})",
-                trainee.getId(), username, password);
+        super(LoggerFactory.getLogger(TraineeFactory.class));
     }
+
+    @Override
+    protected Class<Trainee> getEntityClass() {return Trainee.class;}
+
+    @Override
+    @Pointcut("target(com.crm.gym.factories.TraineeFactory)")
+    public void target_EntityFactory() {}
 }
