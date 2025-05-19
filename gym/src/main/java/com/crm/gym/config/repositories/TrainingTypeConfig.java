@@ -1,4 +1,4 @@
-package com.crm.gym.config;
+package com.crm.gym.config.repositories;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;

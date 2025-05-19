@@ -1,4 +1,4 @@
-package com.crm.gym.config;
+package com.crm.gym.config.repositories;
 
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import com.crm.gym.repositories.interfaces.TemplateRepository;

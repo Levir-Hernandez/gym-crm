@@ -1,4 +1,4 @@
-package com.crm.gym.config;
+package com.crm.gym.config.util;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
