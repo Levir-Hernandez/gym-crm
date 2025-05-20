@@ -47,9 +47,21 @@ public class SecurityConfig
                 .authenticationManager(authManager)
                 .authorizeHttpRequests(
                         auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/trainees").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/trainers").permitAll()
-                        .anyRequest().authenticated()
+                                .requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-resources/**",
+                                        "/webjars/**"
+                                ).permitAll() // Allows open access to OpenAPI docs
+                                .requestMatchers(HttpMethod.POST,
+                                        "/trainees",
+                                        "/trainers",
+                                        "/*/login"
+                                ).permitAll()
+                                .requestMatchers(HttpMethod.PUT,"/*/change-password")
+                                .permitAll() // Allows open access to these endpoints per business rules
+                                .anyRequest().authenticated() // Requires auth for all other requests
                 )
                 .httpBasic(withDefaults())
                 .build();
