@@ -34,4 +34,5 @@ public class Trainee extends User
     }
 
     public Trainee(Long id) {super(id);}
+    public Trainee(String username) {super(username);}
 }

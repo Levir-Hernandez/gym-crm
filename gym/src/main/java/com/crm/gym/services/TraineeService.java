@@ -1,10 +1,7 @@
 package com.crm.gym.services;
 
-import org.springframework.stereotype.Service;
-
-import java.util.Set;
-import com.crm.gym.entities.Trainer;
 import com.crm.gym.entities.Trainee;
+import org.springframework.stereotype.Service;
 import com.crm.gym.repositories.interfaces.TraineeRepository;
 
 @Service
@@ -30,10 +27,5 @@ public class TraineeService extends UserService<Trainee, TraineeRepository>
     public boolean deleteTraineeByUsername(String username)
     {
         return repository.deleteByUsernameIfExists(username);
-    }
-
-    public int updateAssignedTrainersForTrainee(String traineeUsername, Set<Trainer> trainers)
-    {
-        return repository.updateAssignedTrainersForTrainee(traineeUsername, trainers);
     }
 }

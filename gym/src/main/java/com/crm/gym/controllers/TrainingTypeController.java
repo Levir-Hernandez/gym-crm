@@ -1,10 +1,11 @@
 package com.crm.gym.controllers;
 
 import java.util.List;
-import com.crm.gym.entities.TrainingType;
+import java.util.stream.Collectors;
+import com.crm.gym.dtos.trainingType.TrainingTypeDto;
+import com.crm.gym.dtos.mappers.interfaces.TrainingTypeMapper;
 import com.crm.gym.repositories.interfaces.TrainingTypeRepository;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +13,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,11 +23,13 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Training Types", description = "Operations related to training types")
 public class TrainingTypeController
 {
-    TrainingTypeRepository trainingTypeRepository;
+    private TrainingTypeRepository trainingTypeRepository;
+    private TrainingTypeMapper trainingTypeMapper;
 
-    public TrainingTypeController(TrainingTypeRepository trainingTypeRepository)
+    public TrainingTypeController(TrainingTypeRepository trainingTypeRepository, TrainingTypeMapper trainingTypeMapper)
     {
         this.trainingTypeRepository = trainingTypeRepository;
+        this.trainingTypeMapper = trainingTypeMapper;
     }
 
     // 17. Get Training types
@@ -34,13 +39,15 @@ public class TrainingTypeController
                     responseCode = "200", description = "Successful operation",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = TrainingType.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrainingTypeDto.class))
                     )
             )
     })
     @GetMapping
-    public List<TrainingType> getAllTrainingTypes()
+    @ResponseStatus(HttpStatus.OK)
+    public List<TrainingTypeDto> getAllTrainingTypes()
     {
-        return trainingTypeRepository.findAll();
+        return trainingTypeRepository.findAll().stream()
+                .map(trainingTypeMapper::toDto).collect(Collectors.toList());
     }
 }

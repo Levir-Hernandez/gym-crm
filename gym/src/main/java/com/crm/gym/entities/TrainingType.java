@@ -23,4 +23,5 @@ public class TrainingType implements Identifiable<Long>
     private String name;
 
     public TrainingType(Long id) {this.id = id;}
+    public TrainingType(String name) {this.name = name;}
 }

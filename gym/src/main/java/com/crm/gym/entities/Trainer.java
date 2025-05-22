@@ -33,4 +33,5 @@ public class Trainer extends User
     }
 
     public Trainer(Long id) {super(id);}
+    public Trainer(String username) {super(username);}
 }

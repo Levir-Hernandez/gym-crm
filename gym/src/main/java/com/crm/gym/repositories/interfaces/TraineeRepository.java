@@ -4,7 +4,7 @@ import java.util.Optional;
 import com.crm.gym.entities.Trainee;
 import jakarta.transaction.Transactional;
 
-public interface TraineeRepository extends MassiveUpdateRepository, UserRepository<Trainee>
+public interface TraineeRepository extends UserRepository<Trainee>
 {
     void deleteByUsername(String username);
 

@@ -2,6 +2,11 @@ package com.crm.gym.controllers;
 
 import java.util.List;
 import java.time.LocalDate;
+import java.util.stream.Collectors;
+
+import com.crm.gym.dtos.mappers.interfaces.TrainingMapper;
+import com.crm.gym.dtos.training.TrainingDetails;
+import com.crm.gym.dtos.training.TrainingScheduleRequest;
 import com.crm.gym.entities.Training;
 import com.crm.gym.services.TrainingService;
 import com.crm.gym.repositories.TrainingQueryCriteria;
@@ -14,17 +19,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name = "Trainings", description = "Operations related to training sessions")
 public class TrainingController
 {
-    TrainingService trainingService;
+    private TrainingService trainingService;
+    private TrainingMapper trainingMapper;
 
-    public TrainingController(TrainingService trainingService)
+    public TrainingController(TrainingService trainingService, TrainingMapper trainingMapper)
     {
         this.trainingService = trainingService;
+        this.trainingMapper = trainingMapper;
     }
 
     // 14. Add Training
@@ -32,15 +41,18 @@ public class TrainingController
             summary = "Add a new training session", security = @SecurityRequirement(name = "user_auth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Training data", required = true,
-                    content = @Content(schema = @Schema(implementation = Training.class))
+                    content = @Content(schema = @Schema(implementation = TrainingScheduleRequest.class))
             )
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Training created successfully")
+            @ApiResponse(responseCode = "201", description = "Training created successfully", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid training data provided", content = @Content)
     })
     @PostMapping("/trainings")
-    public void createTraining(@RequestBody Training training)
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createTraining(@RequestBody @Valid TrainingScheduleRequest trainingDto)
     {
+        Training training = trainingMapper.toEntity(trainingDto);
         trainingService.saveEntity(training);
     }
 
@@ -51,14 +63,16 @@ public class TrainingController
                     responseCode = "200", description = "Successful operation",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = Training.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrainingDetails.class))
                     )
             )
     })
     @GetMapping("/trainings")
-    public List<Training> getAllTrainings()
+    @ResponseStatus(HttpStatus.OK)
+    public List<TrainingDetails> getAllTrainings()
     {
-        return trainingService.getAllEntities();
+        return trainingService.getAllEntities().stream()
+                .map(trainingMapper::toDetailsDto).collect(Collectors.toList());
     }
 
     // 12. Get Trainee Trainings List
@@ -69,12 +83,13 @@ public class TrainingController
                     responseCode = "200", description = "Successful operation",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = Training.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrainingDetails.class))
                     )
             )
     })
     @GetMapping("/trainees/{traineeUsername}/trainings")
-    public List<Training> getTrainingsByTraineeUsernameAndCriteria(
+    @ResponseStatus(HttpStatus.OK)
+    public List<TrainingDetails> getTrainingsByTraineeUsernameAndCriteria(
             @Parameter(description = "Filter by trainee's username", required = true)
             @PathVariable String traineeUsername,
 
@@ -97,7 +112,8 @@ public class TrainingController
                 .toDate(toDate)
                 .trainingTypeName(trainingTypeName)
                 .build();
-        return trainingService.getTrainingsByTraineeUsernameAndCriteria(criteria);
+        return trainingService.getTrainingsByTraineeUsernameAndCriteria(criteria).stream()
+                .map(trainingMapper::toDetailsDto).collect(Collectors.toList());
     }
 
     // 13. Get Trainer Trainings List
@@ -108,12 +124,13 @@ public class TrainingController
                     responseCode = "200", description = "Successful operation",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = Training.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrainingDetails.class))
                     )
             )
     })
     @GetMapping("/trainers/{trainerUsername}/trainings")
-    public List<Training> getTrainingsByTrainerUsernameAndCriteria(
+    @ResponseStatus(HttpStatus.OK)
+    public List<TrainingDetails> getTrainingsByTrainerUsernameAndCriteria(
             @Parameter(description = "Filter by trainer's username", required = true)
             @PathVariable String trainerUsername,
 
@@ -132,6 +149,7 @@ public class TrainingController
                 .fromDate(fromDate)
                 .toDate(toDate)
                 .build();
-        return trainingService.getTrainingsByTrainerUsernameAndCriteria(criteria);
+        return trainingService.getTrainingsByTrainerUsernameAndCriteria(criteria).stream()
+                .map(trainingMapper::toDetailsDto).collect(Collectors.toList());
     }
 }

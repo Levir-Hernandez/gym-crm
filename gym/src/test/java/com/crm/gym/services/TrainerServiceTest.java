@@ -8,11 +8,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class TrainerServiceTest
 {
     private TrainerService trainerService;
@@ -253,5 +254,31 @@ class TrainerServiceTest
         List<Trainer> actualUnassignedTrainers = trainerService.getAllUnassignedForTraineeByUsername(username);
 
         assertEquals(expectedUnassignedTrainers, actualUnassignedTrainers);
+    }
+
+    @Test
+    @DisplayName("Should update multiple Trainers assigned to a Trainee")
+    public void updateAssignedTrainersForTrainee()
+    {
+        String username = "Alice.Smith";
+        Trainer trainer1, trainer2;
+
+        trainer1 = trainerService.getUserByUsername("John.Doe");
+        trainer2 = trainerService.getUserByUsername("Jane.Smith");
+
+        assertNotEquals("Johnny", trainer1.getFirstname());
+        assertNotEquals("Jennette", trainer2.getFirstname());
+
+        trainer1.setFirstname("Johnny");
+        trainer2.setFirstname("Jennette");
+
+        Set<Trainer> trainersToUpdate = Set.of(trainer1, trainer2);
+        trainerService.updateAssignedTrainersForTrainee(username, trainersToUpdate);
+
+        trainer1 = trainerService.getUserByUsername("John.Doe");
+        trainer2 = trainerService.getUserByUsername("Jane.Smith");
+
+        assertEquals("Johnny", trainer1.getFirstname());
+        assertEquals("Jennette", trainer2.getFirstname());
     }
 }

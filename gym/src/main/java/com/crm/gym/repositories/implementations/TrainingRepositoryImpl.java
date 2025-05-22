@@ -1,25 +1,23 @@
 package com.crm.gym.repositories.implementations;
 
-import com.crm.gym.entities.Trainee;
-import com.crm.gym.entities.Trainer;
-import com.crm.gym.entities.Training;
-import com.crm.gym.entities.TrainingType;
+import com.crm.gym.entities.*;
 import com.crm.gym.repositories.TrainingQueryCriteria;
 import com.crm.gym.repositories.interfaces.DynamicQueryRepository;
 import com.crm.gym.repositories.interfaces.Identifiable;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.criteria.Root;
+
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
+import java.util.function.*;
 
 @Repository
 public class TrainingRepositoryImpl
@@ -32,6 +30,7 @@ public class TrainingRepositoryImpl
     @Override
     public Training create(Training training)
     {
+        resolveReferencesByAltKeys(training);
         nullifyInvalidReferences(training);
         return super.create(training);
     }
@@ -39,6 +38,7 @@ public class TrainingRepositoryImpl
     @Override
     public Training update(Long entityId, Training training)
     {
+        resolveReferencesByAltKeys(training);
         nullifyInvalidReferences(training);
         return super.update(entityId, training);
     }
@@ -55,25 +55,6 @@ public class TrainingRepositoryImpl
         cq.select(training).where(cb.and(predicates.toArray(Predicate[]::new)));
 
         return em.createQuery(cq).getResultList();
-    }
-
-    private void nullifyInvalidReferences(Training training)
-    {
-        BiPredicate<Identifiable<?>, Class<? extends Identifiable<?>>> isInvalidReference;
-
-        isInvalidReference = (entity, entityClass) -> Optional
-                .ofNullable(entity)
-                .map(Identifiable::getId)
-                .map(id -> em.find(entityClass, id))
-                .isEmpty();
-
-        boolean invalidTrainingType = isInvalidReference.test(training.getTrainingType(), TrainingType.class);
-        boolean invalidTrainee = isInvalidReference.test(training.getTrainee(), Trainee.class);
-        boolean invalidTrainer = isInvalidReference.test(training.getTrainer(), Trainer.class);
-
-        if(invalidTrainingType) {training.setTrainingType(null);}
-        if(invalidTrainee) {training.setTrainee(null);}
-        if(invalidTrainer) {training.setTrainer(null);}
     }
 
     private List<Predicate> buildTrainingPredicates(CriteriaBuilder cb, Root<Training> training, TrainingQueryCriteria criteria)
@@ -111,5 +92,58 @@ public class TrainingRepositoryImpl
         );
 
         return predicates;
+    }
+
+    private void nullifyInvalidReferences(Training training)
+    {
+        BiPredicate<Identifiable<?>, Class<? extends Identifiable<?>>> isInvalidReference;
+
+        isInvalidReference = (entity, entityClass) -> Optional
+                .ofNullable(entity)
+                .map(Identifiable::getId)
+                .map(id -> em.find(entityClass, id))
+                .isEmpty();
+
+        boolean invalidTrainingType = isInvalidReference.test(training.getTrainingType(), TrainingType.class);
+        boolean invalidTrainee = isInvalidReference.test(training.getTrainee(), Trainee.class);
+        boolean invalidTrainer = isInvalidReference.test(training.getTrainer(), Trainer.class);
+
+        if(invalidTrainingType) {training.setTrainingType(null);}
+        if(invalidTrainee) {training.setTrainee(null);}
+        if(invalidTrainer) {training.setTrainer(null);}
+    }
+
+    private void resolveReferencesByAltKeys(Training training)
+    {
+        // resolveTrainingTypeReferenceByAltKeys
+        resolveTemplateReferenceByAltKeys(training,
+                "name", () -> training.getTrainingType().getName(),
+                training::getTrainingType, training::setTrainingType);
+
+        // resolveTraineeReferenceByAltKeys
+        resolveTemplateReferenceByAltKeys(training,
+                "username", () -> training.getTrainee().getUsername(),
+                training::getTrainee, training::setTrainee);
+
+        // resolveTrainerReferenceByAltKeys
+        resolveTemplateReferenceByAltKeys(training,
+                "username", () -> training.getTrainer().getUsername(),
+                training::getTrainer, training::setTrainer);
+    }
+
+    private <T extends Identifiable<?>> void resolveTemplateReferenceByAltKeys(Training training,
+                                                String fieldName, Supplier<String> fieldValueSupplier,
+                                                Supplier<T> fieldGetter, Consumer<T> fieldSetter)
+    {
+        T reference = fieldGetter.get();
+        if(Objects.isNull(reference) || Objects.nonNull(reference.getId()) || Objects.isNull(fieldValueSupplier.get())) {return;}
+        try
+        {
+            reference = (T) em.createQuery("SELECT t FROM "+reference.getClass().getSimpleName()+" t WHERE t."+fieldName+" = :"+fieldName)
+                    .setParameter(fieldName, fieldValueSupplier.get())
+                    .getSingleResult();
+        }
+        catch (NoResultException e) {reference = null;}
+        fieldSetter.accept(reference);
     }
 }

@@ -1,7 +1,15 @@
 package com.crm.gym.controllers;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.crm.gym.controllers.exceptions.InvalidCredentialsException;
+import com.crm.gym.controllers.exceptions.ResourceNotFoundException;
+import com.crm.gym.dtos.mappers.interfaces.TrainerMapper;
+import com.crm.gym.dtos.trainer.*;
 import com.crm.gym.entities.Trainer;
 import com.crm.gym.services.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,17 +21,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name = "Trainers", description = "Operations related to trainers")
 public class TrainerController
 {
-    TrainerService trainerService;
+    private TrainerService trainerService;
+    private TrainerMapper trainerMapper;
 
-    public TrainerController(TrainerService trainerService)
+    public TrainerController(TrainerService trainerService, TrainerMapper trainerMapper)
     {
         this.trainerService = trainerService;
+        this.trainerMapper = trainerMapper;
     }
 
     // 2. Trainer Registration
@@ -31,7 +43,7 @@ public class TrainerController
             summary = "Register a new trainer",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Trainer data", required = true,
-                    content = @Content(schema = @Schema(implementation = Trainer.class))
+                    content = @Content(schema = @Schema(implementation = TrainerRegistrationRequest.class))
             )
     )
     @ApiResponses({
@@ -39,14 +51,18 @@ public class TrainerController
                     responseCode = "201", description = "Trainer registered successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Trainer.class)
+                            schema = @Schema(implementation = TrainerCredentials.class)
                     )
-            )
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid trainer data provided", content = @Content)
     })
     @PostMapping("/trainers")
-    public void createTrainer(@RequestBody Trainer trainer)
+    @ResponseStatus(HttpStatus.CREATED)
+    public TrainerCredentials createTrainer(@RequestBody @Valid TrainerRegistrationRequest trainerDto)
     {
-        trainerService.saveEntity(trainer);
+        Trainer trainer = trainerMapper.toEntity(trainerDto);
+        trainer = trainerService.saveEntity(trainer);
+        return trainerMapper.toCredentialsDto(trainer);
     }
 
     // +. Get all Trainers
@@ -56,14 +72,17 @@ public class TrainerController
                     responseCode = "200", description = "Successful operation",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = Trainer.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrainerProfile.class))
                     )
             )
     })
     @GetMapping("/trainers")
-    public List<Trainer> getAllTrainers()
+    @ResponseStatus(HttpStatus.OK)
+    public List<TrainerProfile> getAllTrainers()
     {
-        return trainerService.getAllEntities();
+        return trainerService.getAllEntities().stream()
+                .map(trainerMapper::toProfileDto)
+                .collect(Collectors.toList());
     }
 
     // 8. Get Trainer Profile
@@ -73,17 +92,20 @@ public class TrainerController
                     responseCode = "200", description = "Trainer profile retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Trainer.class)
+                            schema = @Schema(implementation = TrainerProfile.class)
                     )
             ),
             @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content)
     })
     @GetMapping("/trainers/{username}")
-    public Trainer getTrainerByUsername(
+    @ResponseStatus(HttpStatus.OK)
+    public TrainerProfile getTrainerByUsername(
             @Parameter(description = "Trainer's username", required = true)
             @PathVariable String username)
     {
-        return trainerService.getUserByUsername(username);
+        return Optional.ofNullable(trainerService.getUserByUsername(username))
+                .map(trainerMapper::toProfileDto)
+                .orElseThrow(ResourceNotFoundException::new);
     }
 
     // 9. Update Trainer Profile
@@ -91,7 +113,7 @@ public class TrainerController
             summary = "Update trainer profile", security = @SecurityRequirement(name = "user_auth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true, description = "Updated trainer data",
-                    content = @Content(schema = @Schema(implementation = Trainer.class))
+                    content = @Content(schema = @Schema(implementation = TrainerModificationRequest.class))
             )
     )
     @ApiResponses({
@@ -99,19 +121,25 @@ public class TrainerController
                     responseCode = "200", description = "Trainer profile updated successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Trainer.class)
+                            schema = @Schema(implementation = TrainerProfile.class)
                     )
             ),
-            @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid trainer data provided", content = @Content)
     })
     @PutMapping("/trainers/{username}")
-    public Trainer updateTrainerByUsername(
+    @ResponseStatus(HttpStatus.OK)
+    public TrainerProfile updateTrainerByUsername(
             @Parameter(description = "Trainer's username", required = true)
             @PathVariable String username,
 
-            @RequestBody Trainer trainer)
+            @RequestBody @Valid TrainerModificationRequest trainerDto)
     {
-        return trainerService.updateUserByUsername(username, trainer);
+        Trainer trainer = trainerMapper.toEntity(trainerDto);
+
+        return Optional.ofNullable(trainerService.updateUserByUsername(username, trainer))
+                .map(trainerMapper::toProfileDto)
+                .orElseThrow(ResourceNotFoundException::new);
     }
 
     // 16. Activate Trainer
@@ -125,11 +153,13 @@ public class TrainerController
             @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content)
     })
     @PatchMapping("/trainers/{username}/activate")
-    public Boolean activateTrainee(
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean activateTrainer(
             @Parameter(description = "Trainer's username", required = true)
             @PathVariable String username)
     {
-        return trainerService.activateUser(username);
+        return Optional.ofNullable(trainerService.activateUser(username))
+                .orElseThrow(ResourceNotFoundException::new);
     }
 
     // 16. De-Activate Trainer
@@ -143,12 +173,14 @@ public class TrainerController
             @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content)
     })
     @PatchMapping("/trainers/{username}/deactivate")
-    public Boolean deactivateTrainee(
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean deactivateTrainer(
             @Parameter(description = "Trainer's username", required = true)
             @PathVariable String username
     )
     {
-        return trainerService.deactivateUser(username);
+        return Optional.ofNullable(trainerService.deactivateUser(username))
+                .orElseThrow(ResourceNotFoundException::new);
     }
 
     // 3. Login
@@ -158,14 +190,16 @@ public class TrainerController
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @PostMapping("/trainers/login")
-    public boolean login(
+    @ResponseStatus(HttpStatus.OK)
+    public void login(
             @Parameter(description = "Trainer's username", required = true)
             @RequestParam String username,
 
             @Parameter(description = "Trainer's password", required = true)
             @RequestParam String password)
     {
-        return trainerService.login(username, password);
+        boolean logged = trainerService.login(username, password);
+        if(!logged) {throw new InvalidCredentialsException();}
     }
 
     // 4. Change Login
@@ -175,7 +209,8 @@ public class TrainerController
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @PutMapping("/trainers/change-password")
-    public boolean changePassword(
+    @ResponseStatus(HttpStatus.OK)
+    public void changePassword(
             @Parameter(description = "Trainer's username", required = true)
             @RequestParam String username,
 
@@ -185,7 +220,8 @@ public class TrainerController
             @Parameter(description = "New password", required = true)
             @RequestParam String newPassword)
     {
-        return trainerService.changePassword(username, oldPassword, newPassword);
+        boolean passwordChanged = trainerService.changePassword(username, oldPassword, newPassword);
+        if(!passwordChanged){throw new InvalidCredentialsException();}
     }
 
     // 10. Get not assigned on trainee active trainers
@@ -195,17 +231,49 @@ public class TrainerController
                     responseCode = "200", description = "List of unassigned active trainers retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = Trainer.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrainerBriefProfile.class))
                     )
             ),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
     @GetMapping("/trainees/{traineeUsername}/trainers/unassigned")
-    public List<Trainer> getAllUnassignedForTraineeByUsername(
+    @ResponseStatus(HttpStatus.OK)
+    public List<TrainerBriefProfile> getAllUnassignedForTraineeByUsername(
             @Parameter(description = "Trainee's username", required = true)
             @PathVariable String traineeUsername
     )
     {
-        return trainerService.getAllUnassignedForTraineeByUsername(traineeUsername);
+        List<Trainer> trainers = trainerService.getAllUnassignedForTraineeByUsername(traineeUsername);
+        if(Objects.isNull(trainers)) {throw new ResourceNotFoundException();}
+
+        return trainers.stream().map(trainerMapper::toBriefProfileDto).collect(Collectors.toList());
+    }
+
+    // 11. Update Trainee's Trainer List
+    @Operation(
+            summary = "Update assigned trainers for a trainee", security = @SecurityRequirement(name = "user_auth"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Updated set of trainers data", required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TrainerModificationEmbeddedRequest.class)))
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Assigned trainers updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Integer.class))),
+            @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid trainer data provided", content = @Content)
+    })
+    @PutMapping("/trainees/{traineeUsername}/trainers/assigned")
+    @ResponseStatus(HttpStatus.OK)
+    public Integer updateAssignedTrainersForTrainee(
+            @Parameter(description = "Trainee's username", required = true)
+            @PathVariable String traineeUsername,
+            @RequestBody Set<@Valid TrainerModificationEmbeddedRequest> trainerDtos)
+    {
+        Set<Trainer> trainers = trainerDtos.stream().map(trainerMapper::toEntity).collect(Collectors.toSet());
+
+        Integer updatedTrainers = trainerService.updateAssignedTrainersForTrainee(traineeUsername, trainers);
+        if(Objects.isNull(updatedTrainers)) {throw new ResourceNotFoundException();}
+
+        return updatedTrainers;
     }
 }

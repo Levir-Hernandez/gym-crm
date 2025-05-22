@@ -2,11 +2,22 @@ package com.crm.gym.repositories.interfaces;
 
 import java.util.List;
 import com.crm.gym.entities.Trainer;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface TrainerRepository extends UserRepository<Trainer>
+public interface TrainerRepository extends UserRepository<Trainer>,
+        MassiveUpdateRepository, TrainerRefsManager
 {
+    @Override
+    @Transactional
+    default Trainer updateByUsername(String username, Trainer trainer)
+    {
+        resolveReferencesByAltKeys(trainer);
+        nullifyInvalidReferences(trainer);
+        return UserRepository.super.updateByUsername(username, trainer);
+    }
+
     @Query(
             "SELECT DISTINCT t1 FROM Trainer t1 " + // Fetch all active trainers
             "LEFT JOIN Training t2 " +

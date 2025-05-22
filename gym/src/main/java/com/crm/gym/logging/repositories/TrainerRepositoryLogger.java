@@ -4,6 +4,7 @@ import com.crm.gym.entities.Trainer;
 import com.crm.gym.repositories.interfaces.TrainerRepository;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -11,11 +12,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.Set;
 
 @Aspect
 @Component
 public class TrainerRepositoryLogger extends TemplateRepositoryLogger<Long, Trainer>
 {
+    private final String SET = "java.util.Set";
     private final String LIST = "java.util.List";
 
     public TrainerRepositoryLogger()
@@ -34,6 +37,9 @@ public class TrainerRepositoryLogger extends TemplateRepositoryLogger<Long, Trai
 
     @Pointcut("execution("+LIST+" findAllUnassignedForTraineeByUsername(String))")
     public void findAllUnassignedForTraineeByUsername() {}
+
+    @Pointcut("execution(int updateAssignedTrainersForTrainee(String,"+SET+"))")
+    public void updateAssignedTrainersForTrainee() {}
 
     // Advices
 
@@ -64,5 +70,22 @@ public class TrainerRepositoryLogger extends TemplateRepositoryLogger<Long, Trai
         String username = (String) args[0];
 
         logger.info("Fetching trainers not assigned to Trainee {}", username);
+    }
+
+    @AfterReturning(
+            pointcut = "target_EntityRepository() && updateAssignedTrainersForTrainee()",
+            returning = "updatedTrainers")
+    public void afterReturning_updateAssignedTrainersForTrainee(JoinPoint jp, int updatedTrainers)
+    {
+        Object[] args = jp.getArgs();
+        String username = (String) args[0];
+        Set<Trainer> trainers = (Set<Trainer>) args[1];
+
+        logger.info("Changed {} trainers(s) in database for Trainee {}", updatedTrainers, username);
+
+        if(updatedTrainers < trainers.size())
+        {
+            logger.warn("Trainer(s) not assigned to the Trainee were skipped");
+        }
     }
 }

@@ -1,7 +1,6 @@
 package com.crm.gym.services;
 
 import com.crm.gym.entities.Trainee;
-import com.crm.gym.entities.Trainer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,22 +8,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class TraineeServiceTest
 {
     private TraineeService traineeService;
-    private TrainerService trainerService;
 
     @Autowired
-    public TraineeServiceTest(TraineeService traineeService, TrainerService trainerService)
+    public TraineeServiceTest(TraineeService traineeService)
     {
         this.traineeService = traineeService;
-        this.trainerService = trainerService;
     }
 
     @Test
@@ -309,32 +305,5 @@ class TraineeServiceTest
 
         logged = traineeService.login(username, "regularPassword");
         assertFalse(logged);
-    }
-
-    @Test
-    @DisplayName("Should update multiple Trainers assigned to a Trainee")
-    public void updateAssignedTrainersForTrainee()
-    {
-        String username = "Alice.Smith";
-        System.out.println(traineeService.getUserByUsername(username));
-        Trainer trainer1, trainer2;
-
-        trainer1 = trainerService.getUserByUsername("John.Doe");
-        trainer2 = trainerService.getUserByUsername("Jane.Smith");
-
-        assertNotEquals("Johnny", trainer1.getFirstname());
-        assertNotEquals("Jennette", trainer2.getFirstname());
-
-        trainer1.setFirstname("Johnny");
-        trainer2.setFirstname("Jennette");
-
-        Set<Trainer> trainersToUpdate = Set.of(trainer1, trainer2);
-        traineeService.updateAssignedTrainersForTrainee(username, trainersToUpdate);
-
-        trainer1 = trainerService.getUserByUsername("John.Doe");
-        trainer2 = trainerService.getUserByUsername("Jane.Smith");
-
-        assertEquals("Johnny", trainer1.getFirstname());
-        assertEquals("Jennette", trainer2.getFirstname());
     }
 }

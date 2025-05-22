@@ -28,4 +28,5 @@ public abstract class User implements Identifiable<Long>
     private Boolean isActive;
 
     public User(Long id) {this.id = id;}
+    public User(String username) {this.username = username;}
 }
