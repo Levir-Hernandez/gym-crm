@@ -1,12 +1,14 @@
 package com.crm.gym.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
 import com.crm.gym.entities.Training;
-import com.crm.gym.repositories.interfaces.TrainingRepository;
 import com.crm.gym.repositories.TrainingQueryCriteria;
+import com.crm.gym.repositories.interfaces.TrainingRepository;
 
 @Service
 public class TrainingService extends TemplateService<Long, Training, TrainingRepository>
@@ -16,20 +18,13 @@ public class TrainingService extends TemplateService<Long, Training, TrainingRep
         super(repository);
     }
 
-    public List<Training> getTrainingsByTraineeUsernameAndCriteria(TrainingQueryCriteria trainingQueryCriteria)
-    {
-        if(Objects.isNull(trainingQueryCriteria.getTraineeUsername())) {return null;}
-        return getTrainingsByCriteria(trainingQueryCriteria);
-    }
-
-    public List<Training> getTrainingsByTrainerUsernameAndCriteria(TrainingQueryCriteria trainingQueryCriteria)
-    {
-        if(Objects.isNull(trainingQueryCriteria.getTrainerUsername())) {return null;}
-        return getTrainingsByCriteria(trainingQueryCriteria);
-    }
-
     public List<Training> getTrainingsByCriteria(TrainingQueryCriteria trainingQueryCriteria)
     {
-        return repository.findTrainingsByCriteria(trainingQueryCriteria);
+        return repository.findByCriteria(trainingQueryCriteria);
+    }
+
+    public Page<Training> getTrainingsByCriteria(TrainingQueryCriteria trainingQueryCriteria, Pageable pageable)
+    {
+        return repository.findByCriteria(trainingQueryCriteria, pageable);
     }
 }

@@ -5,14 +5,12 @@ import lombok.Setter;
 
 import java.util.List;
 import com.crm.gym.dtos.trainee.TraineeBriefProfile;
+import org.springframework.hateoas.server.core.Relation;
 
 @Getter @Setter
-public class TrainerProfile
+@Relation(collectionRelation = "trainers")
+public class TrainerProfile extends TrainerBriefProfile
 {
-    private String firstname;
-    private String lastname;
-    private String specialization;
     private Boolean isActive;
-
     private List<TraineeBriefProfile> trainees;
 }

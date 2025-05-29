@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Getter @Setter
-public class TrainingScheduleRequest
+public class TrainingScheduleRequest implements TrainingRespDto
 {
     @NotNull(message = "Training name is required")
     private String name;

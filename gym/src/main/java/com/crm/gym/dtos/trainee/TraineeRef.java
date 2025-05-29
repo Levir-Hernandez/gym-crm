@@ -6,7 +6,7 @@ import org.springframework.hateoas.server.core.Relation;
 
 @Getter @Setter
 @Relation(collectionRelation = "trainees")
-public class TraineeCredentials extends TraineeRef
+public class TraineeRef implements TraineeRespDto
 {
-    private String password;
+    private String username;
 }

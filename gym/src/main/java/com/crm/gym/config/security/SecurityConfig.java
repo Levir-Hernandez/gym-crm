@@ -1,5 +1,7 @@
 package com.crm.gym.config.security;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,7 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import org.springframework.http.HttpMethod;
-import static org.springframework.security.config.Customizer.withDefaults;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
 public class SecurityConfig
@@ -26,7 +28,7 @@ public class SecurityConfig
 
     @Bean
     public AuthenticationManager authManager(HttpSecurity http,
-                                             UserDetailsService userDetailsService,
+                                             @Qualifier("userDetailsServiceImpl") UserDetailsService userDetailsService,
                                              PasswordEncoder passwordEncoder) throws Exception
     {
         AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
@@ -63,7 +65,10 @@ public class SecurityConfig
                                 .permitAll() // Allows open access to these endpoints per business rules
                                 .anyRequest().authenticated() // Requires auth for all other requests
                 )
-                .httpBasic(withDefaults())
+                //.httpBasic(withDefaults()) // disabled to prevent conflicts with endpoints returning 401 intentionally
+                .httpBasic(https ->
+                        https.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
                 .build();
     }
 }

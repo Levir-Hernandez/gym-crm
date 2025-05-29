@@ -4,12 +4,14 @@ import com.crm.gym.entities.*;
 import com.crm.gym.repositories.TrainingQueryCriteria;
 import com.crm.gym.repositories.interfaces.DynamicQueryRepository;
 import com.crm.gym.repositories.interfaces.Identifiable;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.*;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.criteria.Root;
 
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -44,17 +46,53 @@ public class TrainingRepositoryImpl
     }
 
     @Override
-    public List<Training> findTrainingsByCriteria(TrainingQueryCriteria criteria)
+    public List<Training> findByCriteria(TrainingQueryCriteria criteria)
     {
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Training> cq = cb.createQuery(Training.class);
+        return findByCriteriaQuery(cb, criteria).getResultList();
+    }
+
+    @Override
+    public Page<Training> findByCriteria(TrainingQueryCriteria criteria, Pageable pageable)
+    {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        TypedQuery<Training> pagedFindByCriteriaQuery = findByCriteriaQuery(cb, criteria)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize());
+
+        TypedQuery<Long> countByCriteriaQuery = buildQueryTemplateByCriteria(
+                cb, criteria,
+                Long.class,
+                trainingRoot -> cb.count(trainingRoot) // Counts Trainings matching criteria
+        );
+
+        Long total = countByCriteriaQuery.getSingleResult();
+        List<Training> content = pagedFindByCriteriaQuery.getResultList();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    private TypedQuery<Training> findByCriteriaQuery(CriteriaBuilder cb, TrainingQueryCriteria criteria)
+    {
+        // Query to fetch Trainings matching the given criteria
+        return buildQueryTemplateByCriteria(
+                cb, criteria,
+                Training.class,
+                trainingRoot -> trainingRoot // Selects the entire Training entity
+        );
+    }
+
+    private <T> TypedQuery<T> buildQueryTemplateByCriteria(
+            CriteriaBuilder cb, TrainingQueryCriteria criteria,
+            Class<T> resultClass, Function<Root<Training>, Selection<? extends T>> trainingSelection
+    )
+    {
+        CriteriaQuery<T> cq = cb.createQuery(resultClass);
         Root<Training> training = cq.from(Training.class);
-
         List<Predicate> predicates = buildTrainingPredicates(cb, training, criteria);
-
-        cq.select(training).where(cb.and(predicates.toArray(Predicate[]::new)));
-
-        return em.createQuery(cq).getResultList();
+        cq.select(trainingSelection.apply(training)).where(cb.and(predicates.toArray(Predicate[]::new)));
+        return em.createQuery(cq);
     }
 
     private List<Predicate> buildTrainingPredicates(CriteriaBuilder cb, Root<Training> training, TrainingQueryCriteria criteria)
@@ -116,24 +154,26 @@ public class TrainingRepositoryImpl
     private void resolveReferencesByAltKeys(Training training)
     {
         // resolveTrainingTypeReferenceByAltKeys
-        resolveTemplateReferenceByAltKeys(training,
+        resolveTemplateReferenceByAltKeys(
                 "name", () -> training.getTrainingType().getName(),
-                training::getTrainingType, training::setTrainingType);
+                training::getTrainingType, training::setTrainingType
+        );
 
         // resolveTraineeReferenceByAltKeys
-        resolveTemplateReferenceByAltKeys(training,
+        resolveTemplateReferenceByAltKeys(
                 "username", () -> training.getTrainee().getUsername(),
-                training::getTrainee, training::setTrainee);
+                training::getTrainee, training::setTrainee
+        );
 
         // resolveTrainerReferenceByAltKeys
-        resolveTemplateReferenceByAltKeys(training,
+        resolveTemplateReferenceByAltKeys(
                 "username", () -> training.getTrainer().getUsername(),
-                training::getTrainer, training::setTrainer);
+                training::getTrainer, training::setTrainer
+        );
     }
 
-    private <T extends Identifiable<?>> void resolveTemplateReferenceByAltKeys(Training training,
-                                                String fieldName, Supplier<String> fieldValueSupplier,
-                                                Supplier<T> fieldGetter, Consumer<T> fieldSetter)
+    private <T extends Identifiable<?>> void resolveTemplateReferenceByAltKeys(String fieldName, Supplier<String> fieldValueSupplier,
+                                                                               Supplier<T> fieldGetter, Consumer<T> fieldSetter)
     {
         T reference = fieldGetter.get();
         if(Objects.isNull(reference) || Objects.nonNull(reference.getId()) || Objects.isNull(fieldValueSupplier.get())) {return;}

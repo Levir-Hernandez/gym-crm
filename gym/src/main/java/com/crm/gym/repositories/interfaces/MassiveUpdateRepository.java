@@ -5,5 +5,5 @@ import com.crm.gym.entities.Trainer;
 
 public interface MassiveUpdateRepository
 {
-        int updateAssignedTrainersForTrainee(String traineeUsername, Set<Trainer> trainers);
+        Set<Trainer> updateAssignedTrainersForTrainee(String traineeUsername, Set<Trainer> trainers);
 }

@@ -7,11 +7,13 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.ToIntFunction;
 
 @Aspect
 @Component
@@ -19,6 +21,9 @@ import java.util.Set;
 {
     private final String SET = "java.util.Set";
     private final String LIST = "java.util.List";
+
+    private final String PAGE = "org.springframework.data.domain.Page";
+    private final String PAGEABLE = "org.springframework.data.domain.Pageable";
 
     public TrainerServiceLogger()
     {
@@ -37,7 +42,10 @@ import java.util.Set;
     @Pointcut("execution("+LIST+" getAllUnassignedForTraineeByUsername(String))")
     public void getAllUnassignedForTraineeByUsername() {}
 
-    @Pointcut("execution(Integer updateAssignedTrainersForTrainee(String,"+SET+"))")
+    @Pointcut("execution("+PAGE+" getAllUnassignedForTraineeByUsername(String,"+PAGEABLE+"))")
+    public void getAllPagedUnassignedForTraineeByUsername() {}
+
+    @Pointcut("execution("+SET+" updateAssignedTrainersForTrainee(String,"+SET+"))")
     public void updateAssignedTrainersForTrainee() {}
 
     // Advices
@@ -52,38 +60,30 @@ import java.util.Set;
     @Around("target_EntityService() && getAllUnassignedForTraineeByUsername()")
     public List<Trainer> around_getAllUnassignedForTraineeByUsername(ProceedingJoinPoint jp) throws Throwable
     {
-        Object[] args = jp.getArgs();
-        String username = (String) args[0];
+        return around_getAllUnassignedForTraineeByUsernameTemplate(jp, List::size);
+    }
 
-        logger.info("Searching for trainers not assigned to Trainee {}", username);
-
-        List<Trainer> unassignedTrainers = (List<Trainer>) jp.proceed();
-
-        if(Objects.nonNull(unassignedTrainers))
-        {
-            logger.info("Found {} unassigned trainer(s) for Trainee {}", unassignedTrainers.size(), username);
-        }
-        else
-        {
-            logger.warn("Trainee {} not found. Returning null", username);
-        }
-
-        return unassignedTrainers;
+    @Around("target_EntityService() && getAllPagedUnassignedForTraineeByUsername()")
+    public Page<Trainer> around_getAllPagedUnassignedForTraineeByUsername(ProceedingJoinPoint jp) throws Throwable
+    {
+        return around_getAllUnassignedForTraineeByUsernameTemplate(
+                jp, pagedTrainings -> (int) pagedTrainings.getTotalElements()
+        );
     }
 
     @Around("target_EntityService() && updateAssignedTrainersForTrainee()")
-    public Integer around_updateAssignedTrainersForTrainee(ProceedingJoinPoint jp) throws Throwable
+    public Set<Trainer> around_updateAssignedTrainersForTrainee(ProceedingJoinPoint jp) throws Throwable
     {
         Object[] args = jp.getArgs();
         String username = (String) args[0];
         Set<Trainer> trainers = (Set<Trainer>) args[1];
 
         logger.info("Updating {} trainers(s) for Trainee {}", trainers.size(), username);
-        Integer updatedTrainers = (Integer) jp.proceed();
+        Set<Trainer> updatedTrainers = (Set<Trainer>) jp.proceed();
 
         if(Objects.nonNull(updatedTrainers))
         {
-            logger.info("Updated {}/{} trainer(s) for Trainee {}", updatedTrainers, trainers.size(), username);
+            logger.info("Updated {}/{} trainer(s) for Trainee {}", updatedTrainers.size(), trainers.size(), username);
         }
         else
         {
@@ -91,5 +91,26 @@ import java.util.Set;
         }
 
         return updatedTrainers;
+    }
+
+    private <T> T around_getAllUnassignedForTraineeByUsernameTemplate(ProceedingJoinPoint jp, ToIntFunction<T> sizeExtractor) throws Throwable
+    {
+        Object[] args = jp.getArgs();
+        String username = (String) args[0];
+
+        logger.info("Searching for trainers not assigned to Trainee {}", username);
+
+        T unassignedTrainers = (T) jp.proceed();
+
+        if(Objects.nonNull(unassignedTrainers))
+        {
+            logger.info("Found {} unassigned trainer(s) for Trainee {}", sizeExtractor.applyAsInt(unassignedTrainers), username);
+        }
+        else
+        {
+            logger.warn("Trainee {} not found. Returning null", username);
+        }
+
+        return unassignedTrainers;
     }
 }

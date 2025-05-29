@@ -3,6 +3,8 @@ package com.crm.gym.services;
 import java.util.List;
 import com.crm.gym.repositories.interfaces.Identifiable;
 import com.crm.gym.repositories.interfaces.TemplateRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public abstract class TemplateService<Id,
         Entity extends Identifiable<Id>,
@@ -38,5 +40,10 @@ public abstract class TemplateService<Id,
     public List<Entity> getAllEntities()
     {
         return repository.findAll();
+    }
+
+    public Page<Entity> getAllEntities(Pageable pageable)
+    {
+        return repository.findAll(pageable);
     }
 }

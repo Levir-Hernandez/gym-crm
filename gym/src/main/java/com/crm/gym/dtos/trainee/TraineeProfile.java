@@ -1,17 +1,17 @@
 package com.crm.gym.dtos.trainee;
 
-import com.crm.gym.dtos.trainer.TrainerBriefProfile;
 import lombok.Getter;
 import lombok.Setter;
+import com.crm.gym.dtos.trainer.TrainerBriefProfile;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.util.List;
 import java.time.LocalDate;
 
 @Getter @Setter
-public class TraineeProfile
+@Relation(collectionRelation = "trainees")
+public class TraineeProfile extends TraineeBriefProfile
 {
-    private String firstname;
-    private String lastname;
     private LocalDate birthdate;
     private String address;
     private Boolean isActive;

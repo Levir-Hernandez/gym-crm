@@ -48,6 +48,7 @@ public class TraineeMapperImpl implements TraineeMapper
     public TraineeProfile toProfileDto(Trainee trainee)
     {
         TraineeProfile dto = new TraineeProfile();
+        dto.setUsername(trainee.getUsername());
         dto.setFirstname(trainee.getFirstname());
         dto.setLastname(trainee.getLastname());
         dto.setBirthdate(trainee.getBirthdate());
@@ -70,6 +71,14 @@ public class TraineeMapperImpl implements TraineeMapper
         dto.setUsername(trainee.getUsername());
         dto.setFirstname(trainee.getFirstname());
         dto.setLastname(trainee.getLastname());
+        return dto;
+    }
+
+    @Override
+    public TraineeRef toRefDto(Trainee trainee)
+    {
+        TraineeRef dto = new TraineeRef();
+        dto.setUsername(trainee.getUsername());
         return dto;
     }
 }

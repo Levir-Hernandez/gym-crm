@@ -307,6 +307,7 @@ class TrainerControllerTest
             .get("/trainees/{traineeUsername}/trainers/unassigned", traineeUsername)
         .then()
             .statusCode(200)
+            .rootPath("_embedded.trainers")
             .body("username", containsInAnyOrder("Mike.Johnson", "Laura.Williams", "Larry.Williams"));
 
         // 404 NOT_FOUND

@@ -7,10 +7,12 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.ToIntFunction;
 
 @Aspect
 @Component
@@ -18,6 +20,9 @@ public class TrainingServiceLogger extends TemplateServiceLogger<Long, Training>
 {
     private final String LIST = "java.util.List";
     private final String TRAINING_QUERY_CRITERIA = "com.crm.gym.repositories.TrainingQueryCriteria";
+
+    private final String PAGE = "org.springframework.data.domain.Page";
+    private final String PAGEABLE = "org.springframework.data.domain.Pageable";
 
     public TrainingServiceLogger()
     {
@@ -33,34 +38,36 @@ public class TrainingServiceLogger extends TemplateServiceLogger<Long, Training>
     @Pointcut("target(com.crm.gym.services.TrainingService)")
     public void target_EntityService() {}
 
-    @Pointcut("execution("+LIST+" getTrainingsByTraineeUsernameAndCriteria("+TRAINING_QUERY_CRITERIA+"))")
-    public void getTrainingsByTraineeUsernameAndCriteria() {}
+    @Pointcut("execution("+LIST+" getTrainingsByCriteria("+TRAINING_QUERY_CRITERIA+"))")
+    public void getTrainingsByCriteria() {}
 
-    @Pointcut("execution("+LIST+" getTrainingsByTrainerUsernameAndCriteria("+TRAINING_QUERY_CRITERIA+"))")
-    public void getTrainingsByTrainerUsernameAndCriteria() {}
+    @Pointcut("execution("+PAGE+" getTrainingsByCriteria("+TRAINING_QUERY_CRITERIA+","+PAGEABLE+"))")
+    public void getPagedTrainingsByCriteria() {}
 
     // Advices
 
-    @Around("target_EntityService() && getTrainingsByTraineeUsernameAndCriteria()")
-    public List<Training> around_getTrainingsByTraineeUsernameAndCriteria(ProceedingJoinPoint jp) throws Throwable
+    @Around("target_EntityService() && getTrainingsByCriteria()")
+    public List<Training> around_getTrainingsByCriteria(ProceedingJoinPoint jp) throws Throwable
     {
-        return around_getTrainingsByCriteria(jp);
+        return around_getTrainingsByCriteriaTemplate(jp, List::size);
     }
 
-    @Around("target_EntityService() && getByTrainerUsernameAndCriteria()")
-    public List<Training> around_getTrainingsByTrainerUsernameAndCriteria(ProceedingJoinPoint jp) throws Throwable
+    @Around("target_EntityService() && getPagedTrainingsByCriteria()")
+    public Page<Training> around_getPagedTrainingsByCriteria(ProceedingJoinPoint jp) throws Throwable
     {
-        return around_getTrainingsByCriteria(jp);
+        return around_getTrainingsByCriteriaTemplate(
+                jp, pagedTrainings -> (int) pagedTrainings.getTotalElements()
+        );
     }
 
-    private List<Training> around_getTrainingsByCriteria(ProceedingJoinPoint jp) throws Throwable
+    private <T> T around_getTrainingsByCriteriaTemplate(ProceedingJoinPoint jp, ToIntFunction<T> sizeExtractor) throws Throwable
     {
         logger.info("Searching for trainings that match the given criteria");
 
-        List<Training> trainings = (List<Training>) jp.proceed();
+        T trainings = (T) jp.proceed();
         if(Objects.nonNull(trainings))
         {
-            logger.info("Found {} training(s) matching the criteria", trainings.size());
+            logger.info("Found {} training(s) matching the criteria", sizeExtractor.applyAsInt(trainings));
         }
 
         return trainings;

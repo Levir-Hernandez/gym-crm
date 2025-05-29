@@ -1,7 +1,5 @@
 package com.crm.gym.controllers;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import com.crm.gym.dtos.trainingType.TrainingTypeDto;
 import com.crm.gym.dtos.mappers.interfaces.TrainingTypeMapper;
 import com.crm.gym.repositories.interfaces.TrainingTypeRepository;
@@ -15,21 +13,32 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Validated
 @RequestMapping("/trainingTypes")
 @Tag(name = "Training Types", description = "Operations related to training types")
 public class TrainingTypeController
 {
     private TrainingTypeRepository trainingTypeRepository;
     private TrainingTypeMapper trainingTypeMapper;
+    private PagedResourcesAssembler<TrainingTypeDto> pagedAssembler;
 
-    public TrainingTypeController(TrainingTypeRepository trainingTypeRepository, TrainingTypeMapper trainingTypeMapper)
+    public TrainingTypeController(TrainingTypeRepository trainingTypeRepository, TrainingTypeMapper trainingTypeMapper, PagedResourcesAssembler<TrainingTypeDto> pagedAssembler)
     {
         this.trainingTypeRepository = trainingTypeRepository;
         this.trainingTypeMapper = trainingTypeMapper;
+        this.pagedAssembler = pagedAssembler;
     }
 
     // 17. Get Training types
@@ -45,9 +54,14 @@ public class TrainingTypeController
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<TrainingTypeDto> getAllTrainingTypes()
+    public PagedModel<EntityModel<TrainingTypeDto>> getAllTrainingTypes(
+            @RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(required = false, defaultValue = "5") @Min(1) @Max(5) Integer size
+    )
     {
-        return trainingTypeRepository.findAll().stream()
-                .map(trainingTypeMapper::toDto).collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, size);
+        return pagedAssembler.toModel(
+                trainingTypeRepository.findAll(pageable).map(trainingTypeMapper::toDto)
+        );
     }
 }

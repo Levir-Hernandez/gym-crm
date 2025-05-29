@@ -62,6 +62,7 @@ public class TrainerMapperImpl implements TrainerMapper
     public TrainerProfile toProfileDto(Trainer trainer)
     {
         TrainerProfile dto = new TrainerProfile();
+        dto.setUsername(trainer.getUsername());
         dto.setFirstname(trainer.getFirstname());
         dto.setLastname(trainer.getLastname());
         dto.setSpecialization(safeSpecializationExtract(trainer));
@@ -84,6 +85,14 @@ public class TrainerMapperImpl implements TrainerMapper
         dto.setFirstname(trainer.getFirstname());
         dto.setLastname(trainer.getLastname());
         dto.setSpecialization(safeSpecializationExtract(trainer));
+        return dto;
+    }
+
+    @Override
+    public TrainerRef toRefDto(Trainer trainer)
+    {
+        TrainerRef dto = new TrainerRef();
+        dto.setUsername(trainer.getUsername());
         return dto;
     }
 

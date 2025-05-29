@@ -2,11 +2,12 @@ package com.crm.gym.dtos.trainee;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.hateoas.server.core.Relation;
 
 @Getter @Setter
-public class TraineeBriefProfile
+@Relation(collectionRelation = "trainees")
+public class TraineeBriefProfile extends TraineeRef
 {
-    private String username;
     private String firstname;
     private String lastname;
 }

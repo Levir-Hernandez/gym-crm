@@ -19,7 +19,6 @@ import java.util.Set;
 public class TrainerRepositoryLogger extends TemplateRepositoryLogger<Long, Trainer>
 {
     private final String SET = "java.util.Set";
-    private final String LIST = "java.util.List";
 
     public TrainerRepositoryLogger()
     {
@@ -35,10 +34,10 @@ public class TrainerRepositoryLogger extends TemplateRepositoryLogger<Long, Trai
     @Pointcut("target(com.crm.gym.repositories.interfaces.TrainerRepository)")
     public void target_EntityRepository() {}
 
-    @Pointcut("execution("+LIST+" findAllUnassignedForTraineeByUsername(String))")
+    @Pointcut("execution(* findAllUnassignedForTraineeByUsername(String,..))")
     public void findAllUnassignedForTraineeByUsername() {}
 
-    @Pointcut("execution(int updateAssignedTrainersForTrainee(String,"+SET+"))")
+    @Pointcut("execution("+SET+" updateAssignedTrainersForTrainee(String,"+SET+"))")
     public void updateAssignedTrainersForTrainee() {}
 
     // Advices
@@ -75,15 +74,15 @@ public class TrainerRepositoryLogger extends TemplateRepositoryLogger<Long, Trai
     @AfterReturning(
             pointcut = "target_EntityRepository() && updateAssignedTrainersForTrainee()",
             returning = "updatedTrainers")
-    public void afterReturning_updateAssignedTrainersForTrainee(JoinPoint jp, int updatedTrainers)
+    public void afterReturning_updateAssignedTrainersForTrainee(JoinPoint jp, Set<Trainer> updatedTrainers)
     {
         Object[] args = jp.getArgs();
         String username = (String) args[0];
         Set<Trainer> trainers = (Set<Trainer>) args[1];
 
-        logger.info("Changed {} trainers(s) in database for Trainee {}", updatedTrainers, username);
+        logger.info("Changed {} trainers(s) in database for Trainee {}", updatedTrainers.size(), username);
 
-        if(updatedTrainers < trainers.size())
+        if(updatedTrainers.size() < trainers.size())
         {
             logger.warn("Trainer(s) not assigned to the Trainee were skipped");
         }

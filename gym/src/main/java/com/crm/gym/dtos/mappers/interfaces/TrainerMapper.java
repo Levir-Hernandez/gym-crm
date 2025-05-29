@@ -12,4 +12,5 @@ public interface TrainerMapper
     TrainerCredentials toCredentialsDto(Trainer trainer);
     TrainerProfile toProfileDto(Trainer trainer);
     TrainerBriefProfile toBriefProfileDto(Trainer trainer);
+    TrainerRef toRefDto(Trainer trainer);
 }

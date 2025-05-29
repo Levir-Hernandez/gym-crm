@@ -1,15 +1,13 @@
 package com.crm.gym.controllers;
 
-import java.util.List;
-import java.time.LocalDate;
-import java.util.stream.Collectors;
-
+import com.crm.gym.dtos.assemblers.TrainingModelAssembler;
 import com.crm.gym.dtos.mappers.interfaces.TrainingMapper;
 import com.crm.gym.dtos.training.TrainingDetails;
+import com.crm.gym.dtos.training.TrainingRespDto;
 import com.crm.gym.dtos.training.TrainingScheduleRequest;
 import com.crm.gym.entities.Training;
-import com.crm.gym.services.TrainingService;
 import com.crm.gym.repositories.TrainingQueryCriteria;
+import com.crm.gym.services.TrainingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -20,8 +18,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @Tag(name = "Trainings", description = "Operations related to training sessions")
@@ -29,11 +36,15 @@ public class TrainingController
 {
     private TrainingService trainingService;
     private TrainingMapper trainingMapper;
+    private TrainingModelAssembler assembler;
+    private PagedResourcesAssembler<TrainingRespDto> pagedAssembler;
 
-    public TrainingController(TrainingService trainingService, TrainingMapper trainingMapper)
+    public TrainingController(TrainingService trainingService, TrainingMapper trainingMapper, TrainingModelAssembler assembler, PagedResourcesAssembler<TrainingRespDto> pagedAssembler)
     {
         this.trainingService = trainingService;
         this.trainingMapper = trainingMapper;
+        this.assembler = assembler;
+        this.pagedAssembler = pagedAssembler;
     }
 
     // 14. Add Training
@@ -50,10 +61,11 @@ public class TrainingController
     })
     @PostMapping("/trainings")
     @ResponseStatus(HttpStatus.CREATED)
-    public void createTraining(@RequestBody @Valid TrainingScheduleRequest trainingDto)
+    public EntityModel<TrainingRespDto> createTraining(@RequestBody @Valid TrainingScheduleRequest trainingDto)
     {
         Training training = trainingMapper.toEntity(trainingDto);
-        trainingService.saveEntity(training);
+        training = trainingService.saveEntity(training);
+        return assembler.toModel(trainingMapper.toDetailsDto(training));
     }
 
     // +. Get all Trainings
@@ -69,10 +81,16 @@ public class TrainingController
     })
     @GetMapping("/trainings")
     @ResponseStatus(HttpStatus.OK)
-    public List<TrainingDetails> getAllTrainings()
+    public PagedModel<EntityModel<TrainingRespDto>> getAllTrainings(
+            @RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(1) @Max(30) Integer size
+    )
     {
-        return trainingService.getAllEntities().stream()
-                .map(trainingMapper::toDetailsDto).collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, size);
+        return pagedAssembler.toModel(
+                trainingService.getAllEntities(pageable)
+                        .map(trainingMapper::toDetailsDto)
+        );
     }
 
     // 12. Get Trainee Trainings List
@@ -89,7 +107,7 @@ public class TrainingController
     })
     @GetMapping("/trainees/{traineeUsername}/trainings")
     @ResponseStatus(HttpStatus.OK)
-    public List<TrainingDetails> getTrainingsByTraineeUsernameAndCriteria(
+    public PagedModel<EntityModel<TrainingRespDto>> getTrainingsByTraineeUsernameAndCriteria(
             @Parameter(description = "Filter by trainee's username", required = true)
             @PathVariable String traineeUsername,
 
@@ -103,8 +121,12 @@ public class TrainingController
             @RequestParam(required = false) LocalDate toDate,
 
             @Parameter(description = "Filter by training type name", example = "Fitness")
-            @RequestParam(required = false) String trainingTypeName)
+            @RequestParam(required = false) String trainingTypeName,
+
+            @RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(1) @Max(30) Integer size)
     {
+        Pageable pageable = PageRequest.of(page, size);
         TrainingQueryCriteria criteria = TrainingQueryCriteria.builder()
                 .traineeUsername(traineeUsername)
                 .trainerUsername(trainerUsername)
@@ -112,8 +134,10 @@ public class TrainingController
                 .toDate(toDate)
                 .trainingTypeName(trainingTypeName)
                 .build();
-        return trainingService.getTrainingsByTraineeUsernameAndCriteria(criteria).stream()
-                .map(trainingMapper::toDetailsDto).collect(Collectors.toList());
+        return pagedAssembler.toModel(
+                trainingService.getTrainingsByCriteria(criteria, pageable)
+                        .map(trainingMapper::toDetailsDto)
+        );
     }
 
     // 13. Get Trainer Trainings List
@@ -130,7 +154,7 @@ public class TrainingController
     })
     @GetMapping("/trainers/{trainerUsername}/trainings")
     @ResponseStatus(HttpStatus.OK)
-    public List<TrainingDetails> getTrainingsByTrainerUsernameAndCriteria(
+    public PagedModel<EntityModel<TrainingRespDto>> getTrainingsByTrainerUsernameAndCriteria(
             @Parameter(description = "Filter by trainer's username", required = true)
             @PathVariable String trainerUsername,
 
@@ -141,15 +165,21 @@ public class TrainingController
             @RequestParam(required = false) LocalDate fromDate,
 
             @Parameter(description = "Filter trainings until this end date", example = "2025-12-31")
-            @RequestParam(required = false) LocalDate toDate)
+            @RequestParam(required = false) LocalDate toDate,
+
+            @RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(1) @Max(30) Integer size)
     {
+        Pageable pageable = PageRequest.of(page, size);
         TrainingQueryCriteria criteria = TrainingQueryCriteria.builder()
                 .trainerUsername(trainerUsername)
                 .traineeUsername(traineeUsername)
                 .fromDate(fromDate)
                 .toDate(toDate)
                 .build();
-        return trainingService.getTrainingsByTrainerUsernameAndCriteria(criteria).stream()
-                .map(trainingMapper::toDetailsDto).collect(Collectors.toList());
+        return pagedAssembler.toModel(
+                trainingService.getTrainingsByCriteria(criteria, pageable)
+                        .map(trainingMapper::toDetailsDto)
+        );
     }
 }

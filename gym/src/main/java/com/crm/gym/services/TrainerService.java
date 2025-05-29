@@ -4,6 +4,8 @@ import com.crm.gym.entities.Trainer;
 import com.crm.gym.repositories.interfaces.TraineeRepository;
 import com.crm.gym.repositories.interfaces.TrainerRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,7 +37,15 @@ public class TrainerService extends UserService<Trainer, TrainerRepository>
                 .orElse(null);
     }
 
-    public Integer updateAssignedTrainersForTrainee(String traineeUsername, Set<Trainer> trainers)
+    public Page<Trainer> getAllUnassignedForTraineeByUsername(String username, Pageable pageable)
+    {
+        return Optional.of(username)
+                .filter(traineeRepository::existsByUsername)
+                .map(validTrainee -> repository.findAllUnassignedForTraineeByUsername(validTrainee, pageable))
+                .orElse(null);
+    }
+
+    public Set<Trainer> updateAssignedTrainersForTrainee(String traineeUsername, Set<Trainer> trainers)
     {
         return Optional.of(traineeUsername)
                 .filter(traineeRepository::existsByUsername)

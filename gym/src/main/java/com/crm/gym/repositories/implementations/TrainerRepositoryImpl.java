@@ -79,7 +79,7 @@ public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
 
     @Override
     @Transactional
-    public int updateAssignedTrainersForTrainee(String traineeUsername, Set<Trainer> trainers)
+    public Set<Trainer> updateAssignedTrainersForTrainee(String traineeUsername, Set<Trainer> trainers)
     {
         Set<String> usernames = trainers.stream()
                 .map(Trainer::getUsername).collect(Collectors.toSet());
@@ -103,7 +103,7 @@ public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
         // Merge valid trainers
         trainers.forEach(em::merge);
 
-        return trainers.size();
+        return trainers;
     }
 
     private Map<String, Long> fetchTrainersIds(String traineeUsername, Set<String> usernames)

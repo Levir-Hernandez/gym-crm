@@ -16,9 +16,6 @@ import java.util.stream.Stream;
 @Component
 public class TrainingRepositoryLogger extends TemplateRepositoryLogger<Long, Training>
 {
-    private final String LIST = "java.util.List";
-    private final String TRAINING_QUERY_CRITERIA = "com.crm.gym.repositories.TrainingQueryCriteria";
-
     public TrainingRepositoryLogger()
     {
         super(LoggerFactory.getLogger(TrainingRepository.class));
@@ -33,8 +30,8 @@ public class TrainingRepositoryLogger extends TemplateRepositoryLogger<Long, Tra
     @Pointcut("target(com.crm.gym.repositories.interfaces.TrainingRepository)")
     public void target_EntityRepository() {}
 
-    @Pointcut("execution("+LIST+" findTrainingsByCriteria("+TRAINING_QUERY_CRITERIA+"))")
-    public void findTrainingsByCriteria() {}
+    @Pointcut("execution(* findByCriteria(..))")
+    public void findByCriteria() {}
 
     // Advices
 
@@ -65,8 +62,8 @@ public class TrainingRepositoryLogger extends TemplateRepositoryLogger<Long, Tra
         return training;
     }
 
-    @Before("target_EntityRepository() && findTrainingsByCriteria()")
-    public void before_findTrainingsByCriteria()
+    @Before("target_EntityRepository() && findByCriteria()")
+    public void before_findByCriteria()
     {
         logger.info("Fetching trainings based on provided criteria");
     }

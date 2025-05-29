@@ -2,12 +2,10 @@ package com.crm.gym.controllers;
 
 import com.crm.gym.controllers.exceptions.InvalidCredentialsException;
 import com.crm.gym.controllers.exceptions.ResourceNotFoundException;
-import com.crm.gym.dtos.trainee.TraineeCredentials;
-import com.crm.gym.dtos.trainee.TraineeModificationRequest;
-import com.crm.gym.dtos.trainee.TraineeProfile;
-import com.crm.gym.dtos.trainee.TraineeRegistrationRequest;
-import com.crm.gym.entities.Trainee;
+import com.crm.gym.dtos.assemblers.TraineeModelAssembler;
 import com.crm.gym.dtos.mappers.implementations.TraineeMapperImpl;
+import com.crm.gym.dtos.trainee.*;
+import com.crm.gym.entities.Trainee;
 import com.crm.gym.services.TraineeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,12 +17,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/trainees")
@@ -33,11 +37,15 @@ public class TraineeController
 {
     private TraineeService traineeService;
     private TraineeMapperImpl traineeMapper;
+    private TraineeModelAssembler assembler;
+    private PagedResourcesAssembler<TraineeRespDto> pagedAssembler;
 
-    public TraineeController(TraineeService traineeService, TraineeMapperImpl traineeMapper)
+    public TraineeController(TraineeService traineeService, TraineeMapperImpl traineeMapper, TraineeModelAssembler assembler, PagedResourcesAssembler<TraineeRespDto> pagedAssembler)
     {
         this.traineeService = traineeService;
         this.traineeMapper = traineeMapper;
+        this.assembler = assembler;
+        this.pagedAssembler = pagedAssembler;
     }
 
     // 1. Trainee Registration
@@ -60,11 +68,11 @@ public class TraineeController
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TraineeCredentials createTrainee(@RequestBody @Valid TraineeRegistrationRequest traineeDto)
+    public EntityModel<TraineeRespDto> createTrainee(@RequestBody @Valid TraineeRegistrationRequest traineeDto)
     {
         Trainee trainee = traineeMapper.toEntity(traineeDto);
         trainee = traineeService.saveEntity(trainee);
-        return traineeMapper.toCredentialsDto(trainee);
+        return assembler.toModel(traineeMapper.toCredentialsDto(trainee));
     }
 
     // +. Get all Trainees
@@ -80,11 +88,16 @@ public class TraineeController
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<TraineeProfile> getAllTrainees()
+    public PagedModel<EntityModel<TraineeRespDto>> getAllTrainees(
+            @RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(1) @Max(30) Integer size
+    )
     {
-        return traineeService.getAllEntities().stream()
-                .map(traineeMapper::toProfileDto)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, size);
+        return pagedAssembler.toModel(
+                traineeService.getAllEntities(pageable)
+                        .map(traineeMapper::toProfileDto)
+        );
     }
 
     // 5. Get Trainee Profile
@@ -101,12 +114,13 @@ public class TraineeController
     })
     @GetMapping("/{username}")
     @ResponseStatus(HttpStatus.OK)
-    public TraineeProfile getTraineeByUsername(
+    public EntityModel<TraineeRespDto> getTraineeByUsername(
             @Parameter(description = "Trainee's username", required = true)
             @PathVariable String username)
     {
         return Optional.ofNullable(traineeService.getUserByUsername(username))
                 .map(traineeMapper::toProfileDto)
+                .map(assembler::toModel)
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
@@ -131,7 +145,7 @@ public class TraineeController
     })
     @PutMapping("/{username}")
     @ResponseStatus(HttpStatus.OK)
-    public TraineeProfile updateTraineeByUsername(
+    public EntityModel<TraineeRespDto> updateTraineeByUsername(
             @Parameter(description = "Trainee's username", required = true)
             @PathVariable String username,
 
@@ -141,6 +155,7 @@ public class TraineeController
 
         return Optional.ofNullable(traineeService.updateUserByUsername(username, trainee))
                 .map(traineeMapper::toProfileDto)
+                .map(assembler::toModel)
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
@@ -148,42 +163,56 @@ public class TraineeController
     @Operation(summary = "Activate trainee profile", security = @SecurityRequirement(name = "user_auth"))
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "200",
-                    description = "Trainee activated successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))
+                    responseCode = "200", description = "Trainee activated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TraineeRef.class)
+                    )
             ),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
     @PatchMapping("/{username}/activate")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean activateTrainee(
+    public EntityModel<TraineeRespDto> activateTrainee(
             @Parameter(description = "Trainee's username", required = true)
             @PathVariable String username
     )
     {
-        return Optional.ofNullable(traineeService.activateUser(username))
+        Optional.ofNullable(traineeService.activateUser(username))
                 .orElseThrow(ResourceNotFoundException::new);
+
+        TraineeRef traineeDto = new TraineeRef();
+        traineeDto.setUsername(username);
+
+        return assembler.toModel(traineeDto);
     }
 
     // 15. De-Activate Trainee
     @Operation(summary = "Deactivate trainee profile", security = @SecurityRequirement(name = "user_auth"))
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "200",
-                    description = "Trainee deactivated successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))
+                    responseCode = "200", description = "Trainee deactivated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TraineeRef.class)
+                    )
             ),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
     @PatchMapping("/{username}/deactivate")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean deactivateTrainee(
+    public EntityModel<TraineeRespDto> deactivateTrainee(
             @Parameter(description = "Trainee's username", required = true)
             @PathVariable String username
     )
     {
-        return Optional.ofNullable(traineeService.deactivateUser(username))
+        Optional.ofNullable(traineeService.deactivateUser(username))
                 .orElseThrow(ResourceNotFoundException::new);
+
+        TraineeRef traineeDto = new TraineeRef();
+        traineeDto.setUsername(username);
+
+        return assembler.toModel(traineeDto);
     }
 
     // 7. Delete Trainee Profile
@@ -194,24 +223,34 @@ public class TraineeController
     })
     @DeleteMapping("/{username}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTraineeByUsername(
+    public ResponseEntity<Void> deleteTraineeByUsername(
             @Parameter(description = "Trainee's username", required = true)
             @PathVariable String username
     )
     {
         boolean deleted = traineeService.deleteTraineeByUsername(username);
         if(!deleted){throw new ResourceNotFoundException();}
+
+        return ResponseEntity.noContent()
+                .header("X-Resource-Id", username)
+                .build();
     }
 
     // 3. Login
     @Operation(summary = "Log in as a trainee")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Credentials verified successfully", content = @Content),
+            @ApiResponse(
+                    responseCode = "200", description = "Credentials verified successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TraineeRef.class)
+                    )
+            ),
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public void login(
+    public EntityModel<TraineeRespDto> login(
             @Parameter(description = "Trainee's username", required = true)
             @RequestParam String username,
 
@@ -220,17 +259,28 @@ public class TraineeController
     {
         boolean logged = traineeService.login(username, password);
         if(!logged) {throw new InvalidCredentialsException();}
+
+        TraineeRef traineeDto = new TraineeRef();
+        traineeDto.setUsername(username);
+
+        return assembler.toModel(traineeDto);
     }
 
     // 4. Change Login
     @Operation(summary = "Change trainee password")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Password changed successfully", content = @Content),
+            @ApiResponse(
+                    responseCode = "200", description = "Password changed successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TraineeRef.class)
+                    )
+            ),
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @PutMapping("/change-password")
     @ResponseStatus(HttpStatus.OK)
-    public void changePassword(
+    public EntityModel<TraineeRespDto> changePassword(
             @Parameter(description = "Trainee's username", required = true)
             @RequestParam String username,
 
@@ -242,5 +292,10 @@ public class TraineeController
     {
         boolean passwordChanged = traineeService.changePassword(username, oldPassword, newPassword);
         if(!passwordChanged){throw new InvalidCredentialsException();}
+
+        TraineeRef traineeDto = new TraineeRef();
+        traineeDto.setUsername(username);
+
+        return assembler.toModel(traineeDto);
     }
 }

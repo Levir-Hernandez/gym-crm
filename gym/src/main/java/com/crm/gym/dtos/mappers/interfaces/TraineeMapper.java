@@ -11,4 +11,5 @@ public interface TraineeMapper
     TraineeCredentials toCredentialsDto(Trainee trainee);
     TraineeProfile toProfileDto(Trainee trainee);
     TraineeBriefProfile toBriefProfileDto(Trainee trainee);
+    TraineeRef toRefDto(Trainee trainee);
 }

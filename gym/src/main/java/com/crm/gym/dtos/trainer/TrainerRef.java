@@ -1,4 +1,4 @@
-package com.crm.gym.dtos.trainee;
+package com.crm.gym.dtos.trainer;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,7 +6,7 @@ import org.springframework.hateoas.server.core.Relation;
 
 @Getter @Setter
 @Relation(collectionRelation = "trainees")
-public class TraineeCredentials extends TraineeRef
+public class TrainerRef implements TrainerRespDto
 {
-    private String password;
+    private String username;
 }

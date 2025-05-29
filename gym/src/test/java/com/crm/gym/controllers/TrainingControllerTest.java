@@ -111,12 +111,13 @@ class TrainingControllerTest
             .queryParam("toDate", "2025-12-31")
             .queryParam("trainingTypeName", trainingTypeName)
         .when()
-                .get("/trainees/{traineeUsername}/trainings", traineeUsername)
+            .get("/trainees/{traineeUsername}/trainings", traineeUsername)
         .then()
-                .statusCode(200)
-                .body("trainerUsername", everyItem(equalTo(trainerUsername)))
-                .body("traineeUsername", everyItem(equalTo(traineeUsername)))
-                .body("trainingType", everyItem(equalTo(trainingTypeName)));
+            .statusCode(200)
+            .rootPath("_embedded.trainings")
+            .body("trainerUsername", everyItem(equalTo(trainerUsername)))
+            .body("traineeUsername", everyItem(equalTo(traineeUsername)))
+            .body("trainingType", everyItem(equalTo(trainingTypeName)));
     }
 
     @Test
@@ -138,6 +139,7 @@ class TrainingControllerTest
             .get("/trainers/{trainerUsername}/trainings", trainerUsername)
         .then()
             .statusCode(200)
+            .rootPath("_embedded.trainings")
             .body("trainerUsername", everyItem(equalTo(trainerUsername)))
             .body("traineeUsername", everyItem(equalTo(traineeUsername)))
             .body("trainingType", everyItem(equalTo(trainingTypeName)));
