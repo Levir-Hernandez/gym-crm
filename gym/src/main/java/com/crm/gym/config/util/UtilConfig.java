@@ -9,35 +9,60 @@ import com.crm.gym.repositories.interfaces.TrainerRepository;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.crm.gym.util.*;
+import org.springframework.web.client.NoOpResponseErrorHandler;
+import org.springframework.web.client.ResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 import java.util.Random;
 
 @Configuration
-public class UtilConfig
-{
+public class UtilConfig {
     @Bean
     public UsernameGenerator usernameGenerator(@Lazy TraineeRepository traineeRepository,
-                                               @Lazy TrainerRepository trainerRepository)
-    {
+                                               @Lazy TrainerRepository trainerRepository) {
         return new UsernameGeneratorImpl(traineeRepository, trainerRepository);
     }
 
     @Bean
-    public PasswordGenerator passwordGenerator(Random random)
-    {
+    public PasswordGenerator passwordGenerator(Random random) {
         return new PasswordGeneratorImpl(random);
     }
 
     @Bean
-    public Random random()
-    {
+    public Random random() {
         return new Random();
     }
 
     @Bean
-    public ObjectMapper objectMapper()
-    {
+    public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         return mapper;
+    }
+
+    @Bean
+    public ResponseErrorHandler responseErrorHandler()
+    {
+        return new NoOpResponseErrorHandler();
+    }
+
+    @Bean
+    public RestTemplate restTemplate(ResponseErrorHandler responseErrorHandler)
+    {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(responseErrorHandler);
+        return restTemplate;
+    }
+
+    @Bean
+    public List<String> entities()
+    {
+        return List.of(
+            "trainees",
+            "trainers",
+            "trainings",
+            "training-types"
+        );
     }
 }

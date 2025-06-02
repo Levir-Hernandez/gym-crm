@@ -5,11 +5,16 @@ import com.crm.gym.repositories.interfaces.Identifiable;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 public abstract class TemplateFactoryLogger<Id, Entity extends Identifiable<Id>>
 {
     private final Logger logger;
     protected final String IDENTIFIABLE = "com.crm.gym.repositories.interfaces.Identifiable";
+
+    private boolean showUsername;
+    private boolean showPassword;
 
     public TemplateFactoryLogger(Logger logger) {this.logger = logger;}
 
@@ -35,10 +40,22 @@ public abstract class TemplateFactoryLogger<Id, Entity extends Identifiable<Id>>
         String username = trainee.getUsername();
         String password = trainee.getPassword();
 
-        //username = "*".repeat(username.length());
-        //password = "*".repeat(password.length());
+        if(!showUsername){username = "*".repeat(username.length());}
+        if(!showPassword){password = "*".repeat(password.length());}
 
         logger.info("Generated {} (username:{}, password:{})",
                 getEntityClass().getSimpleName(), username, password);
+    }
+
+    @Autowired
+    private void setShowUsername(@Value("${logging.user-credentials.show-username:false}") boolean showUsername)
+    {
+        this.showUsername = showUsername;
+    }
+
+    @Autowired
+    private void setShowPassword(@Value("${logging.user-credentials.show-password:false}") boolean showPassword)
+    {
+        this.showPassword = showPassword;
     }
 }

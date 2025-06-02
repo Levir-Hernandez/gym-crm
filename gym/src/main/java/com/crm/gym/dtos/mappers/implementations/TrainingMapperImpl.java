@@ -1,7 +1,11 @@
 package com.crm.gym.dtos.mappers.implementations;
 
+import com.crm.gym.entities.Trainee;
+import com.crm.gym.entities.Trainer;
+import com.crm.gym.entities.Training;
+import com.crm.gym.entities.TrainingType;
+
 import java.util.Optional;
-import com.crm.gym.entities.*;
 import java.util.function.Function;
 
 import org.springframework.stereotype.Component;

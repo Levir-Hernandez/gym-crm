@@ -1,59 +1,41 @@
 package com.crm.gym.config.repositories;
 
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import com.crm.gym.repositories.interfaces.TemplateRepository;
 import com.crm.gym.repositories.interfaces.Identifiable;
-import org.springframework.beans.factory.BeanFactoryAware;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.beans.factory.BeanFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.BeansException;
-import org.springframework.core.io.Resource;
-import java.io.IOException;
+import com.crm.gym.util.EntityResourceLoader;
+
+import jakarta.annotation.PostConstruct;
+
+import java.util.Objects;
+import java.util.Optional;
 import java.util.List;
 
-public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>> implements BeanFactoryAware
+public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>>
 {
-    private DefaultListableBeanFactory beanFactory;
+    protected String entitiesPath;
+    protected TemplateRepository<Id, Entity> entityRepository;
+    protected EntityResourceLoader entityResourceLoader;
 
-    private ObjectMapper mapper;
-    private String traineesPath;
-    private TemplateRepository<Id, Entity> entityRepository;
-
-    public TemplateConfig(ObjectMapper mapper, String traineesPath, TemplateRepository<Id, Entity> entityRepository)
+    public TemplateConfig(String entitiesPath, TemplateRepository<Id, Entity> entityRepository, EntityResourceLoader entityResourceLoader)
     {
-        this.mapper = mapper;
-        this.traineesPath = traineesPath;
+        this.entitiesPath = entitiesPath;
         this.entityRepository = entityRepository;
-    }
-
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException
-    {
-        this.beanFactory = (DefaultListableBeanFactory) beanFactory;
+        this.entityResourceLoader = entityResourceLoader;
     }
 
     protected abstract Class<Entity> getEntityClass();
 
-    protected void createEntitiesFromJson(String beanPrefix)
+    @PostConstruct
+    protected boolean createEntitiesFromJson()
     {
-        Resource entitiesFile = new ClassPathResource(traineesPath);
+        if(entitiesPath.isEmpty()){return false;}
 
-        CollectionType collectionType = mapper.getTypeFactory()
-                .constructCollectionType(List.class, getEntityClass());
+        List<Entity> entities = entityResourceLoader.loadEntitiesFromJson(entitiesPath, getEntityClass());
 
-        try
-        {
-            List<Entity> entities = mapper.readValue(entitiesFile.getInputStream(), collectionType);
-            for (Entity entity : entities)
-            {
-                entityRepository.create(entity);
-            }
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Error loading objects of class (" + getEntityClass().getName() + ") from JSON", e);
-        }
+        Optional.ofNullable(entities)
+                .stream().flatMap(List::stream)
+                .forEach(entityRepository::create);
+
+        return Objects.nonNull(entities);
     }
 }

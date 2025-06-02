@@ -3,30 +3,30 @@
     "firstname": "John",
     "lastname": "Doe",
     "isActive": true,
-    "specialization": 1
+    "specialization": "Fitness"
   },
   {
     "firstname": "Jane",
     "lastname": "Smith",
     "isActive": true,
-    "specialization": 2
+    "specialization": "Yoga"
   },
   {
     "firstname": "Mike",
     "lastname": "Johnson",
     "isActive": true,
-    "specialization": 2
+    "specialization": "Yoga"
   },
   {
     "firstname": "Laura",
     "lastname": "Williams",
     "isActive": true,
-    "specialization": 3
+    "specialization": "Zumba"
   },
   {
     "firstname": "Tom",
     "lastname": "Anderson",
     "isActive": false,
-    "specialization": 4
+    "specialization": "Stretching"
   }
 ]

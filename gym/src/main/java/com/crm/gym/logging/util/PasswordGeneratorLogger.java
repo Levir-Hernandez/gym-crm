@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -13,6 +14,12 @@ import org.springframework.stereotype.Component;
 public class PasswordGeneratorLogger
 {
     private final Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);
+    private boolean showPassword;
+
+    public PasswordGeneratorLogger(@Value("${logging.user-credentials.show-password:false}") boolean showPassword)
+    {
+        this.showPassword = showPassword;
+    }
 
     @Pointcut("within(com.crm.gym.util.PasswordGenerator+) && execution(String generatePassword())")
     public void generatePassword() {}
@@ -20,7 +27,7 @@ public class PasswordGeneratorLogger
     @AfterReturning(pointcut = "generatePassword()", returning = "password")
     public void afterReturning_generateUsername(String password)
     {
-        //password = "*".repeat(password.length());
+        if(!showPassword){password = "*".repeat(password.length());}
         logger.debug("Generated new password: {}", password);
     }
 }

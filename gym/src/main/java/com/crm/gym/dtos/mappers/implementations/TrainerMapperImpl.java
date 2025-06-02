@@ -1,12 +1,19 @@
 package com.crm.gym.dtos.mappers.implementations;
 
+import com.crm.gym.dtos.trainer.TrainerModificationEmbeddedRequest;
+import com.crm.gym.dtos.trainer.TrainerRegistrationRequest;
+import com.crm.gym.dtos.trainer.TrainerModificationRequest;
+import com.crm.gym.dtos.trainer.TrainerBriefProfile;
+import com.crm.gym.dtos.trainer.TrainerCredentials;
+import com.crm.gym.dtos.trainer.TrainerProfile;
+import com.crm.gym.dtos.trainer.TrainerRef;
+import com.crm.gym.entities.Trainer;
+
 import com.crm.gym.dtos.mappers.interfaces.TraineeMapper;
 import com.crm.gym.dtos.mappers.interfaces.TrainerMapper;
-import com.crm.gym.dtos.trainer.*;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
-import com.crm.gym.entities.Trainer;
 import com.crm.gym.entities.Training;
 import com.crm.gym.entities.TrainingType;
 import org.springframework.stereotype.Component;

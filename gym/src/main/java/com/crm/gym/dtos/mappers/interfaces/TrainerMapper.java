@@ -1,6 +1,12 @@
 package com.crm.gym.dtos.mappers.interfaces;
 
-import com.crm.gym.dtos.trainer.*;
+import com.crm.gym.dtos.trainer.TrainerModificationEmbeddedRequest;
+import com.crm.gym.dtos.trainer.TrainerRegistrationRequest;
+import com.crm.gym.dtos.trainer.TrainerModificationRequest;
+import com.crm.gym.dtos.trainer.TrainerBriefProfile;
+import com.crm.gym.dtos.trainer.TrainerCredentials;
+import com.crm.gym.dtos.trainer.TrainerProfile;
+import com.crm.gym.dtos.trainer.TrainerRef;
 import com.crm.gym.entities.Trainer;
 
 public interface TrainerMapper

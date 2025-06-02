@@ -1,6 +1,7 @@
 package com.crm.gym.config.security;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,6 +17,8 @@ import org.springframework.context.annotation.Configuration;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 public class SecurityConfig
@@ -41,8 +44,25 @@ public class SecurityConfig
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   AuthenticationManager authManager) throws Exception
+    @Order(1)
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http,
+                                                           AuthenticationManager authManager) throws Exception
+    {
+        return http
+                .securityMatcher("/actuator/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .authenticationManager(authManager)
+                .authorizeHttpRequests(
+                        auth -> auth.anyRequest().authenticated()
+                )
+                .httpBasic(withDefaults())
+                .build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain appSecurityFilterChain(HttpSecurity http,
+                                                      AuthenticationManager authManager) throws Exception
     {
         return http
                 .csrf(AbstractHttpConfigurer::disable)

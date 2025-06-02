@@ -1,8 +1,14 @@
 package com.crm.gym.dtos.mappers.implementations;
 
-import com.crm.gym.dtos.trainee.*;
-import java.util.stream.Collectors;
+import com.crm.gym.dtos.trainee.TraineeRegistrationRequest;
+import com.crm.gym.dtos.trainee.TraineeModificationRequest;
+import com.crm.gym.dtos.trainee.TraineeBriefProfile;
+import com.crm.gym.dtos.trainee.TraineeCredentials;
+import com.crm.gym.dtos.trainee.TraineeProfile;
+import com.crm.gym.dtos.trainee.TraineeRef;
 import com.crm.gym.entities.Trainee;
+
+import java.util.stream.Collectors;
 import com.crm.gym.entities.Training;
 import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Lazy;
@@ -67,6 +73,7 @@ public class TraineeMapperImpl implements TraineeMapper
     @Override
     public TraineeBriefProfile toBriefProfileDto(Trainee trainee)
     {
+        System.out.println(trainee);
         TraineeBriefProfile dto = new TraineeBriefProfile();
         dto.setUsername(trainee.getUsername());
         dto.setFirstname(trainee.getFirstname());

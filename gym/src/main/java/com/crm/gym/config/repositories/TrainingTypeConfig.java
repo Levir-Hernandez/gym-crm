@@ -1,26 +1,41 @@
 package com.crm.gym.config.repositories;
 
+import com.crm.gym.util.EntityResourceLoader;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
-import jakarta.annotation.PostConstruct;
 
 import com.crm.gym.repositories.interfaces.TrainingTypeRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.crm.gym.entities.TrainingType;
 
 @Configuration
 public class TrainingTypeConfig extends TemplateConfig<Long, TrainingType>
 {
-    public TrainingTypeConfig(ObjectMapper mapper,
-                              @Value("${storage.training-types.path}") String trainingTypesPath,
-                              TrainingTypeRepository trainingTypeRepository)
+    public TrainingTypeConfig(@Value("${storage.training-types.path:}") String trainingTypesPath,
+                              TrainingTypeRepository trainingTypeRepository,
+                              EntityResourceLoader entityResourceLoader)
     {
-        super(mapper, trainingTypesPath, trainingTypeRepository);
+        super(trainingTypesPath, trainingTypeRepository, entityResourceLoader);
     }
 
     @Override
     protected Class<TrainingType> getEntityClass() {return TrainingType.class;}
 
-    @PostConstruct
-    public void createTrainingTypesFromJson() {createEntitiesFromJson("trainingType");}
+    @Override
+    protected boolean createEntitiesFromJson()
+    {
+        boolean createdFromJson = super.createEntitiesFromJson();
+        if(entityRepository.count() < 1 && !createdFromJson)
+        {
+            throw new UnavailableTrainingTypesException();
+        }
+        return createdFromJson;
+    }
+
+    private static class UnavailableTrainingTypesException extends RuntimeException
+    {
+        public UnavailableTrainingTypesException()
+        {
+            super("TrainingTypes missing: none found in the database and no valid entity source provided");
+        }
+    }
 }
