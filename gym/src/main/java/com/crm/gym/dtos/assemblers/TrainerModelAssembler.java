@@ -52,10 +52,14 @@ public class TrainerModelAssembler implements RepresentationModelAssembler<Train
                         .withRel("activate-trainer"),
                 linkTo(methodOn(TrainerController.class).deactivateTrainer(username))
                         .withRel("deactivate-trainer"),
-                linkTo(methodOn(TrainerController.class).login(username, null))
+                linkTo(methodOn(TrainerController.class).login(null))
                         .withRel("authenticate-trainer"),
-                linkTo(methodOn(TrainerController.class).changePassword(username, null, null))
+                linkTo(methodOn(TrainerController.class).changePassword(null))
                         .withRel("update-trainer-password"),
+                linkTo(methodOn(TrainerController.class).logout(null))
+                        .withRel("logout-trainer"),
+                linkTo(methodOn(TrainerController.class).refresh(null))
+                        .withRel("refresh-trainer-tokens"),
                 linkTo(methodOn(TrainerController.class).getAllUnassignedForTraineeByUsername(username, null, null))
                         .withRel("unassigned-trainers-for-trainee"),
                 linkTo(methodOn(TrainerController.class).updateAssignedTrainersForTrainee(username, null))

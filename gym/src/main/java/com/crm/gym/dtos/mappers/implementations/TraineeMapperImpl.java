@@ -73,7 +73,6 @@ public class TraineeMapperImpl implements TraineeMapper
     @Override
     public TraineeBriefProfile toBriefProfileDto(Trainee trainee)
     {
-        System.out.println(trainee);
         TraineeBriefProfile dto = new TraineeBriefProfile();
         dto.setUsername(trainee.getUsername());
         dto.setFirstname(trainee.getFirstname());

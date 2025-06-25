@@ -1,6 +1,7 @@
 package com.crm.gym.services;
 
 import com.crm.gym.entities.Trainer;
+import com.crm.gym.factories.TrainerFactory;
 import com.crm.gym.repositories.interfaces.TraineeRepository;
 import com.crm.gym.repositories.interfaces.TrainerRepository;
 
@@ -15,18 +16,21 @@ import java.util.Set;
 @Service
 public class TrainerService extends UserService<Trainer, TrainerRepository>
 {
+    private TrainerFactory trainerFactory;
     private TraineeRepository traineeRepository;
 
-    public TrainerService(TrainerRepository repository, TraineeRepository traineeRepository)
+    public TrainerService(TrainerRepository repository, TrainerFactory trainerFactory, TraineeRepository traineeRepository)
     {
         super(repository);
+        this.trainerFactory = trainerFactory;
         this.traineeRepository = traineeRepository;
     }
 
     @Override
-    public Trainer updateEntity(Long idTrainer, Trainer trainer)
+    public Trainer saveEntity(Trainer trainer)
     {
-        return super.updateEntity(idTrainer, trainer);
+        trainer = trainerFactory.recreate(trainer);
+        return super.saveEntity(trainer);
     }
 
     public List<Trainer> getAllUnassignedForTraineeByUsername(String username)

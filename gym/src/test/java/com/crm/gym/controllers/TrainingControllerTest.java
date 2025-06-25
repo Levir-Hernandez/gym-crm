@@ -1,8 +1,10 @@
 package com.crm.gym.controllers;
 
+import com.crm.gym.dtos.trainee.TraineeRegistrationRequest;
+import com.crm.gym.dtos.trainee.TraineeTokenWrapper;
+import com.crm.gym.dtos.trainer.TrainerRegistrationRequest;
+import com.crm.gym.dtos.trainer.TrainerTokenWrapper;
 import com.crm.gym.dtos.training.TrainingScheduleRequest;
-import com.crm.gym.entities.Trainee;
-import com.crm.gym.services.TraineeService;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,7 +16,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
-import java.util.Base64;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -22,18 +23,25 @@ import static org.hamcrest.Matchers.everyItem;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TrainingControllerTest
 {
-    private final static String CREDENTIALS = "user.test:1234";
-    private static String TOKEN;
+    private static String TRAINEE_ACCESS_TOKEN;
+    private static String TRAINER_ACCESS_TOKEN;
 
     @Autowired
-    public TrainingControllerTest(TraineeService traineeService)
+    public TrainingControllerTest(TraineeController traineeController, TrainerController trainerController)
     {
-        Trainee trainee = new Trainee(null, "user", "test", null, null, null, null, null);
-        trainee = traineeService.saveEntity(trainee);
-        traineeService.changePassword(trainee.getUsername(), trainee.getPassword(), "1234");
+        TraineeRegistrationRequest traineeRegistrationRequest = new TraineeRegistrationRequest();
+        traineeRegistrationRequest.setFirstname("trainee");
+        traineeRegistrationRequest.setLastname("test");
+
+        TrainerRegistrationRequest trainerRegistrationRequest = new TrainerRegistrationRequest();
+        trainerRegistrationRequest.setFirstname("trainer");
+        trainerRegistrationRequest.setLastname("test");
+
+        TRAINEE_ACCESS_TOKEN = ((TraineeTokenWrapper) traineeController.createTrainee(traineeRegistrationRequest).getContent()).getAccessToken();
+        TRAINER_ACCESS_TOKEN = ((TrainerTokenWrapper) trainerController.createTrainer(trainerRegistrationRequest).getContent()).getAccessToken();
     }
 
     @BeforeAll
@@ -41,8 +49,6 @@ class TrainingControllerTest
     {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8080;
-
-        TOKEN = Base64.getEncoder().encodeToString(CREDENTIALS.getBytes());
     }
 
     @Test
@@ -60,7 +66,7 @@ class TrainingControllerTest
         // 200 OK
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(trainingDto)
             .contentType(ContentType.JSON)
@@ -74,7 +80,7 @@ class TrainingControllerTest
         trainingDto.setTraineeUsername(null);
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(trainingDto)
             .contentType(ContentType.JSON)
@@ -89,7 +95,7 @@ class TrainingControllerTest
     void getAllTrainings()
     {
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainings")
@@ -106,7 +112,7 @@ class TrainingControllerTest
         String trainingTypeName = "Fitness";
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .queryParam("trainerUsername", trainerUsername)
             .queryParam("fromDate", "2025-01-01")
@@ -131,7 +137,7 @@ class TrainingControllerTest
         String trainingTypeName = "Fitness";
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .queryParam("traineeUsername", traineeUsername)
             .queryParam("fromDate", "2025-01-01")

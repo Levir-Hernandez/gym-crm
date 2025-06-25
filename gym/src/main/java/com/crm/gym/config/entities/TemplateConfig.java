@@ -1,7 +1,8 @@
-package com.crm.gym.config.repositories;
+package com.crm.gym.config.entities;
 
 import com.crm.gym.repositories.interfaces.TemplateRepository;
 import com.crm.gym.repositories.interfaces.Identifiable;
+import com.crm.gym.services.TemplateService;
 import com.crm.gym.util.EntityResourceLoader;
 
 import jakarta.annotation.PostConstruct;
@@ -10,16 +11,18 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.List;
 
-public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>>
+public abstract class TemplateConfig<Id,
+        Entity extends Identifiable<Id>,
+        Repository extends TemplateRepository<Id,Entity>>
 {
     protected String entitiesPath;
-    protected TemplateRepository<Id, Entity> entityRepository;
+    protected TemplateService<Id, Entity, Repository> entityService;
     protected EntityResourceLoader entityResourceLoader;
 
-    public TemplateConfig(String entitiesPath, TemplateRepository<Id, Entity> entityRepository, EntityResourceLoader entityResourceLoader)
+    public TemplateConfig(String entitiesPath, TemplateService<Id, Entity, Repository> entityService, EntityResourceLoader entityResourceLoader)
     {
         this.entitiesPath = entitiesPath;
-        this.entityRepository = entityRepository;
+        this.entityService = entityService;
         this.entityResourceLoader = entityResourceLoader;
     }
 
@@ -34,7 +37,7 @@ public abstract class TemplateConfig<Id, Entity extends Identifiable<Id>>
 
         Optional.ofNullable(entities)
                 .stream().flatMap(List::stream)
-                .forEach(entityRepository::create);
+                .forEach(entityService::saveEntity);
 
         return Objects.nonNull(entities);
     }

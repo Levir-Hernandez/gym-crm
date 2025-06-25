@@ -1,6 +1,8 @@
 package com.crm.gym.dtos.trainer;
 
-public interface TrainerRespDto
+import com.crm.gym.dtos.user.UserRespDto;
+
+public interface TrainerRespDto extends UserRespDto
 {
-    String getUsername();
+
 }

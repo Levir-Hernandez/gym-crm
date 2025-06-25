@@ -7,7 +7,7 @@ import com.crm.gym.util.UsernameGenerator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TrainerFactory implements TemplateFactory<Long, Trainer>
+public class TrainerFactory implements UserFactory<Long, Trainer>
 {
     private UsernameGenerator usernameGenerator;
     private PasswordGenerator passwordGenerator;
@@ -33,6 +33,7 @@ public class TrainerFactory implements TemplateFactory<Long, Trainer>
         return trainer;
     }
 
+    @Override
     public Trainer recreate(Trainer trainer)
     {
         return create(trainer.getFirstname(), trainer.getLastname(),

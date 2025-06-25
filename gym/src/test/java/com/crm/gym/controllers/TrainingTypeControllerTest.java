@@ -1,7 +1,7 @@
 package com.crm.gym.controllers;
 
-import com.crm.gym.entities.Trainee;
-import com.crm.gym.services.TraineeService;
+import com.crm.gym.dtos.trainee.TraineeRegistrationRequest;
+import com.crm.gym.dtos.trainee.TraineeTokenWrapper;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
@@ -9,25 +9,26 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.util.Base64;
 
 import static io.restassured.RestAssured.given;
 
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TrainingTypeControllerTest
 {
-    private final static String CREDENTIALS = "user.test:1234";
-    private static String TOKEN;
+    private static String ACCESS_TOKEN;
 
     @Autowired
-    public TrainingTypeControllerTest(TraineeService traineeService)
+    public TrainingTypeControllerTest(TraineeController traineeController)
     {
-        Trainee trainee = new Trainee(null, "user", "test", null, null, null, null, null);
-        trainee = traineeService.saveEntity(trainee);
-        traineeService.changePassword(trainee.getUsername(), trainee.getPassword(), "1234");
+        TraineeRegistrationRequest traineeRegistrationRequest = new TraineeRegistrationRequest();
+        traineeRegistrationRequest.setFirstname("user");
+        traineeRegistrationRequest.setLastname("test");
+
+        ACCESS_TOKEN = ((TraineeTokenWrapper) traineeController.createTrainee(traineeRegistrationRequest).getContent()).getAccessToken();
     }
 
     @BeforeAll
@@ -35,8 +36,6 @@ class TrainingTypeControllerTest
     {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8080;
-
-        TOKEN = Base64.getEncoder().encodeToString(CREDENTIALS.getBytes());
     }
 
     @Test
@@ -44,7 +43,7 @@ class TrainingTypeControllerTest
     void getAllTrainingTypes()
     {
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainingTypes")

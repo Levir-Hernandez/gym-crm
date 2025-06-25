@@ -1,6 +1,5 @@
 package com.crm.gym.controllers;
 
-import com.crm.gym.controllers.exceptions.InvalidCredentialsException;
 import com.crm.gym.controllers.exceptions.ResourceNotFoundException;
 import com.crm.gym.dtos.assemblers.TraineeModelAssembler;
 import com.crm.gym.dtos.mappers.implementations.TraineeMapperImpl;
@@ -27,25 +26,34 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
+
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @RestController
 @RequestMapping("/trainees")
 @Tag(name = "Trainees", description = "Operations related to trainees")
-public class TraineeController
+public class TraineeController extends UserController<TraineeService, TraineeRespDto>
 {
     private TraineeService traineeService;
     private TraineeMapperImpl traineeMapper;
     private TraineeModelAssembler assembler;
     private PagedResourcesAssembler<TraineeRespDto> pagedAssembler;
+    private TraineeTokenWrapper.Builder traineeTokenWrapperBuilder;
 
-    public TraineeController(TraineeService traineeService, TraineeMapperImpl traineeMapper, TraineeModelAssembler assembler, PagedResourcesAssembler<TraineeRespDto> pagedAssembler)
+    public TraineeController(TraineeService traineeService, TraineeMapperImpl traineeMapper, TraineeModelAssembler assembler, PagedResourcesAssembler<TraineeRespDto> pagedAssembler, TraineeTokenWrapper.Builder traineeTokenWrapperBuilder)
     {
+        super(traineeService, assembler, traineeTokenWrapperBuilder);
+
         this.traineeService = traineeService;
         this.traineeMapper = traineeMapper;
         this.assembler = assembler;
         this.pagedAssembler = pagedAssembler;
+        this.traineeTokenWrapperBuilder = traineeTokenWrapperBuilder;
     }
+
+    @Override
+    protected Supplier<TraineeRespDto> userRefSupplier() {return TraineeRef::new;}
 
     // 1. Trainee Registration
     @Operation(
@@ -71,7 +79,12 @@ public class TraineeController
     {
         Trainee trainee = traineeMapper.toEntity(traineeDto);
         trainee = traineeService.saveEntity(trainee);
-        return assembler.toModel(traineeMapper.toCredentialsDto(trainee));
+
+        TraineeRespDto traineeRespDto;
+        traineeRespDto = traineeMapper.toCredentialsDto(trainee);
+        traineeRespDto = traineeTokenWrapperBuilder.wrap(traineeRespDto);
+
+        return assembler.toModel(traineeRespDto);
     }
 
     // +. Get all Trainees
@@ -236,33 +249,27 @@ public class TraineeController
     }
 
     // 3. Login
-    @Operation(summary = "Log in as a trainee")
+    @Operation(summary = "Log in as a trainee",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Trainee credentials", required = true,
+                    content = @Content(schema = @Schema(implementation = TraineeLoginRequest.class))
+            ))
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200", description = "Credentials verified successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = TraineeRef.class)
+                            schema = @Schema(implementation = TraineeTokenWrapper.class)
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
+            @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Trainee data not properly structured", content = @Content)
     })
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public EntityModel<TraineeRespDto> login(
-            @Parameter(description = "Trainee's username", required = true)
-            @RequestParam String username,
-
-            @Parameter(description = "Trainee's password", required = true)
-            @RequestParam String password)
+    public EntityModel<TraineeRespDto> login(@RequestBody @Valid TraineeLoginRequest traineeDto)
     {
-        boolean logged = traineeService.login(username, password);
-        if(!logged) {throw new InvalidCredentialsException();}
-
-        TraineeRef traineeDto = new TraineeRef();
-        traineeDto.setUsername(username);
-
-        return assembler.toModel(traineeDto);
+        return super.login(traineeDto);
     }
 
     // 4. Change Login
@@ -272,29 +279,55 @@ public class TraineeController
                     responseCode = "200", description = "Password changed successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = TraineeRef.class)
+                            schema = @Schema(implementation = TraineeTokenWrapper.class)
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
+            @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Trainee data not properly structured", content = @Content)
     })
     @PutMapping("/change-password")
     @ResponseStatus(HttpStatus.OK)
-    public EntityModel<TraineeRespDto> changePassword(
-            @Parameter(description = "Trainee's username", required = true)
-            @RequestParam String username,
-
-            @Parameter(description = "Current password", required = true)
-            @RequestParam String oldPassword,
-
-            @Parameter(description = "New password", required = true)
-            @RequestParam String newPassword)
+    public EntityModel<TraineeRespDto> changePassword(@RequestBody @Valid TraineeChangePasswordRequest traineeDto)
     {
-        boolean passwordChanged = traineeService.changePassword(username, oldPassword, newPassword);
-        if(!passwordChanged){throw new InvalidCredentialsException();}
+        return super.changePassword(traineeDto);
+    }
 
-        TraineeRef traineeDto = new TraineeRef();
-        traineeDto.setUsername(username);
+    // +. Logout
+    @Operation(summary = "Log out trainee", security = @SecurityRequirement(name = "user_auth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Logged out successfully", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
+    })
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ResponseEntity<Void> logout(
+            @Parameter(description = "Optional refresh token to revoke")
+            @RequestHeader(name = "X-Refresh-Token", required = false) String refreshToken
+    )
+    {
+        return super.logout(refreshToken);
+    }
 
-        return assembler.toModel(traineeDto);
+    // +. Refresh
+    @Operation(summary = "Refresh trainee tokens")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200", description = "Tokens rotated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TraineeTokenWrapper.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Missing required X-Refresh-Token header", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Token is invalid or lacks the appropriate role", content = @Content)
+    })
+    @PostMapping("/refresh")
+    @ResponseStatus(HttpStatus.OK)
+    public EntityModel<TraineeRespDto> refresh(
+            @Parameter(description = "Refresh token consumed for rotation", required = true)
+            @RequestHeader("X-Refresh-Token") String refreshToken
+    )
+    {
+        return super.refresh(refreshToken, "TRAINEE");
     }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -14,15 +15,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TraineeServiceTest
 {
     private TraineeService traineeService;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public TraineeServiceTest(TraineeService traineeService)
+    public TraineeServiceTest(TraineeService traineeService, PasswordEncoder passwordEncoder)
     {
         this.traineeService = traineeService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Test
@@ -218,6 +221,13 @@ class TraineeServiceTest
         Long id = traineeExpected.getId();
         Trainee traineeActual = traineeService.getEntityById(id);
 
+        String rawPassword = traineeExpected.getPassword();
+        String encodedPassword = traineeActual.getPassword();
+
+        assertTrue(passwordEncoder.matches(rawPassword, encodedPassword));
+
+        traineeActual.setPassword(rawPassword);
+
         assertEquals(traineeExpected, traineeActual);
     }
 
@@ -283,8 +293,14 @@ class TraineeServiceTest
     @DisplayName("Should login return true when username and password match")
     void login()
     {
-        String username = "Charlie.Brown";
-        Trainee trainee = traineeService.getUserByUsername(username);
+        Trainee trainee = new Trainee(null,
+                "Natalie", "Reed",
+                null, null,
+                true, LocalDate.parse("1993-12-05"), "17 Sunset Blvd");
+
+        trainee = traineeService.saveEntity(trainee);
+
+        String username = trainee.getUsername();
         String password = trainee.getPassword();
 
         boolean logged = traineeService.login(username, password);
@@ -296,8 +312,14 @@ class TraineeServiceTest
     @DisplayName("Should login return false when username or password is incorrect")
     void login2()
     {
-        String username = "Charlie.Brown";
-        Trainee trainee = traineeService.getUserByUsername(username);
+        Trainee trainee = new Trainee(null,
+                "Marcus", "Hughes",
+                null, null,
+                true, LocalDate.parse("1989-08-17"), "88 Riverbank Lane");
+
+        trainee = traineeService.saveEntity(trainee);
+
+        String username = trainee.getUsername();
         String password = trainee.getPassword();
 
         boolean logged;

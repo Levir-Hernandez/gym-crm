@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.crm.gym.entities.Trainer;
 import com.crm.gym.entities.TrainingType;
-import com.crm.gym.factories.TrainerFactory;
 import com.crm.gym.repositories.interfaces.MassiveUpdateRepository;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Tuple;
@@ -21,13 +20,6 @@ import com.crm.gym.repositories.interfaces.TrainerRefsManager;
 public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
         implements TrainerRefsManager, MassiveUpdateRepository
 {
-    private TrainerFactory trainerFactory;
-
-    public TrainerRepositoryImpl(TrainerFactory trainerFactory)
-    {
-        this.trainerFactory = trainerFactory;
-    }
-
     @Override
     protected Class<Trainer> getEntityClass() {return Trainer.class;}
 
@@ -36,7 +28,6 @@ public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
     {
         resolveReferencesByAltKeys(trainer);
         nullifyInvalidReferences(trainer);
-        trainer = trainerFactory.recreate(trainer);
         return super.create(trainer);
     }
 

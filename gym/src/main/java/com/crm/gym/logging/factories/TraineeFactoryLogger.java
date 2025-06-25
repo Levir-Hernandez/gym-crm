@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
-public class TraineeFactoryLogger extends TemplateFactoryLogger<Long, Trainee>
+public class TraineeFactoryLogger extends UserFactoryLogger<Trainee>
 {
     public TraineeFactoryLogger()
     {
@@ -17,9 +17,9 @@ public class TraineeFactoryLogger extends TemplateFactoryLogger<Long, Trainee>
     }
 
     @Override
-    protected Class<Trainee> getEntityClass() {return Trainee.class;}
+    protected Class<Trainee> getUserClass() {return Trainee.class;}
 
     @Override
     @Pointcut("target(com.crm.gym.factories.TraineeFactory)")
-    public void target_EntityFactory() {}
+    public void target_UserFactory() {}
 }

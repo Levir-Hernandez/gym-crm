@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -15,15 +16,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TrainerServiceTest
 {
     private TrainerService trainerService;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public TrainerServiceTest(TrainerService trainerService)
+    public TrainerServiceTest(TrainerService trainerService, PasswordEncoder passwordEncoder)
     {
         this.trainerService = trainerService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Test
@@ -151,6 +154,13 @@ class TrainerServiceTest
         Long id = trainerExpected.getId();
         Trainer trainerActual = trainerService.getEntityById(id);
 
+        String rawPassword = trainerExpected.getPassword();
+        String encodedPassword = trainerActual.getPassword();
+
+        assertTrue(passwordEncoder.matches(rawPassword, encodedPassword));
+
+        trainerActual.setPassword(rawPassword);
+
         assertEquals(trainerExpected, trainerActual);
     }
 
@@ -216,8 +226,14 @@ class TrainerServiceTest
     @DisplayName("Should login return true when username and password match")
     void login()
     {
-        String username = "John.Doe";
-        Trainer trainer = trainerService.getUserByUsername(username);
+        Trainer trainer = new Trainer(null,
+                "Derek", "Foster",
+                null, null,
+                false, null);
+
+        trainer = trainerService.saveEntity(trainer);
+
+        String username = trainer.getUsername();
         String password = trainer.getPassword();
 
         boolean logged = trainerService.login(username, password);
@@ -229,8 +245,14 @@ class TrainerServiceTest
     @DisplayName("Should login return false when username or password is incorrect")
     void login2()
     {
-        String username = "John.Doe";
-        Trainer trainer = trainerService.getUserByUsername(username);
+        Trainer trainer = new Trainer(null,
+                "Ashley", "Johnson",
+                null, null,
+                false, null);
+
+        trainer = trainerService.saveEntity(trainer);
+
+        String username = trainer.getUsername();
         String password = trainer.getPassword();
 
         boolean logged;

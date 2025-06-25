@@ -36,10 +36,14 @@ public class TraineeModelAssembler implements RepresentationModelAssembler<Train
                         .withRel("deactivate-trainee"),
                 linkTo(methodOn(TraineeController.class).deleteTraineeByUsername(username))
                         .withRel("delete-trainee"),
-                linkTo(methodOn(TraineeController.class).login(username, null))
+                linkTo(methodOn(TraineeController.class).login(null))
                         .withRel("authenticate-trainee"),
-                linkTo(methodOn(TraineeController.class).changePassword(username, null, null))
-                        .withRel("update-trainee-password")
+                linkTo(methodOn(TraineeController.class).changePassword(null))
+                        .withRel("update-trainee-password"),
+                linkTo(methodOn(TraineeController.class).logout(null))
+                        .withRel("logout-trainee"),
+                linkTo(methodOn(TraineeController.class).refresh(null))
+                        .withRel("refresh-trainee-tokens")
         };
     }
 }

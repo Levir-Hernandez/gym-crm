@@ -22,6 +22,12 @@ management:
     health:
       show-details: always
 
+auth:
+  jwt:
+    secret-key: bGViZCtw0fI7UBWsFlOzXeRhDoZDrT4L3oSGt8+gvA4=
+    access-token-expiration: 900 # 15 minutes
+    refresh-token-expiration: 86400 # 24 hours
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %+5level ${PID} --- [${spring.application.name}] [%+15.15thread]  [%6.6X{traceId}] %-40.40logger{39} : %msg%n"

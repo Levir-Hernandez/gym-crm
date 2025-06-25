@@ -26,39 +26,15 @@ public abstract class UserRepositoryLogger<S extends User> extends TemplateRepos
     @Pointcut("execution("+USER+" updateByUsername(String,"+USER+"))")
     public void updateByUsername() {}
 
-    @Pointcut("execution(boolean existsByUsernameAndPassword(String,String))")
-    public void existsByUsernameAndPassword() {}
-
     @Around("target_EntityRepository() && findByUsername()")
     public Optional<S> around_findByUsername(ProceedingJoinPoint jp) throws Throwable
     {
-        return super.around_findById(jp);
+        return super.around_findBy(jp);
     }
 
     @Around("target_EntityRepository() && updateByUsername()")
     public S around_updateByUsername(ProceedingJoinPoint jp) throws Throwable
     {
         return super.around_update(jp);
-    }
-
-    @Around("target_EntityRepository() && existsByUsernameAndPassword()")
-    public boolean around_existsByUsernameAndPassword(ProceedingJoinPoint jp) throws Throwable
-    {
-        Object[] args = jp.getArgs();
-        String username = (String) args[0];
-
-        logger.info("Verifying User exists with the given username and password");
-
-        boolean exists = (boolean) jp.proceed();
-        if(exists)
-        {
-            logger.info("User {} found in the database", username);
-        }
-        else
-        {
-            logger.warn("User {} not found with the provided password", username);
-        }
-
-        return exists;
     }
 }

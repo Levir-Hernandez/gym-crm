@@ -37,7 +37,9 @@ public class OpenAPIConfig
                                 "user_auth",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
-                                        .scheme("basic")
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("After obtaining a token, provide it here to authorize your requests.")
                         )
                 );
     }
@@ -53,10 +55,15 @@ public class OpenAPIConfig
                         )
                         .forEach(operation ->
                                 // Add 401 Unauthorized response
-                                operation.getResponses().addApiResponse(
-                                        String.valueOf(HttpStatus.UNAUTHORIZED.value()),
-                                        new ApiResponse().description("Invalid credentials")
-                                )
+                                operation.getResponses()
+                                        .addApiResponse(
+                                            String.valueOf(HttpStatus.UNAUTHORIZED.value()),
+                                            new ApiResponse().description("Bearer Authentication is required to access this resource")
+                                        )
+                                        .addApiResponse(
+                                                String.valueOf(HttpStatus.FORBIDDEN.value()),
+                                                new ApiResponse().description("Token is invalid or lacks the appropriate role")
+                                        )
                         )
         );
     }

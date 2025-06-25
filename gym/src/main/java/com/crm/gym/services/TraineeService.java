@@ -1,27 +1,26 @@
 package com.crm.gym.services;
 
 import com.crm.gym.entities.Trainee;
+import com.crm.gym.factories.TraineeFactory;
 import org.springframework.stereotype.Service;
 import com.crm.gym.repositories.interfaces.TraineeRepository;
 
 @Service
 public class TraineeService extends UserService<Trainee, TraineeRepository>
 {
-    public TraineeService(TraineeRepository repository)
+    private TraineeFactory traineeFactory;
+
+    public TraineeService(TraineeRepository repository, TraineeFactory traineeFactory)
     {
         super(repository);
+        this.traineeFactory = traineeFactory;
     }
 
     @Override
-    public Trainee updateEntity(Long idTrainee, Trainee trainee)
+    public Trainee saveEntity(Trainee trainee)
     {
-        return super.updateEntity(idTrainee, trainee);
-    }
-
-    @Override
-    public boolean deleteEntity(Long entityId)
-    {
-        return super.deleteEntity(entityId);
+        trainee = traineeFactory.recreate(trainee);
+        return super.saveEntity(trainee);
     }
 
     public boolean deleteTraineeByUsername(String username)

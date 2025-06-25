@@ -1,9 +1,6 @@
 package com.crm.gym.controllers;
 
-import com.crm.gym.dtos.trainee.TraineeModificationRequest;
-import com.crm.gym.dtos.trainee.TraineeRegistrationRequest;
-import com.crm.gym.entities.Trainee;
-import com.crm.gym.services.TraineeService;
+import com.crm.gym.dtos.trainee.*;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,25 +12,34 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
-import java.util.Base64;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TraineeControllerTest
 {
-    private final static String CREDENTIALS = "user.test:1234";
-    private static String TOKEN;
+    private static String ACCESS_TOKEN;
 
     @Autowired
-    public TraineeControllerTest(TraineeService traineeService)
+    public TraineeControllerTest(TraineeController traineeController)
     {
-        Trainee trainee = new Trainee(null, "user", "test", null, null, null, null, null);
-        trainee = traineeService.saveEntity(trainee);
-        traineeService.changePassword(trainee.getUsername(), trainee.getPassword(), "1234");
+        TraineeRegistrationRequest traineeRegistrationRequest = new TraineeRegistrationRequest();
+        traineeRegistrationRequest.setFirstname("user");
+        traineeRegistrationRequest.setLastname("test");
+
+        TraineeTokenWrapper traineeRespDto = (TraineeTokenWrapper) traineeController.createTrainee(traineeRegistrationRequest).getContent();
+
+        ACCESS_TOKEN = traineeRespDto.getAccessToken();
+
+        TraineeChangePasswordRequest traineeChangePasswordRequest = new TraineeChangePasswordRequest();
+        traineeChangePasswordRequest.setUsername(traineeRespDto.getUsername());
+        traineeChangePasswordRequest.setOldPassword(((TraineeCredentials)traineeRespDto.getUser()).getPassword());
+        traineeChangePasswordRequest.setNewPassword("1234");
+
+        traineeController.changePassword(traineeChangePasswordRequest);
     }
 
     @BeforeAll
@@ -41,8 +47,6 @@ class TraineeControllerTest
     {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8080;
-
-        TOKEN = Base64.getEncoder().encodeToString(CREDENTIALS.getBytes());
     }
 
     @Test
@@ -68,6 +72,7 @@ class TraineeControllerTest
             .post("/trainees")
         .then()
             .statusCode(201)
+            .rootPath("trainee")
             .body("username", equalTo(traineeFirstname+"."+traineeLastname));
 
         // 400 BAD_REQUEST
@@ -89,7 +94,7 @@ class TraineeControllerTest
     void getAllTrainees()
     {
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainees")
@@ -108,7 +113,7 @@ class TraineeControllerTest
         String username = firstname+"."+lastname;
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainees/{username}", username)
@@ -122,7 +127,7 @@ class TraineeControllerTest
         username = "Unknown.Unknown";
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainees/{username}", username)
@@ -147,7 +152,7 @@ class TraineeControllerTest
         // 200 OK
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(traineeDto)
             .contentType(ContentType.JSON)
@@ -163,7 +168,7 @@ class TraineeControllerTest
         traineeDto.setFirstname(null);
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(traineeDto)
             .contentType(ContentType.JSON)
@@ -181,7 +186,7 @@ class TraineeControllerTest
 
         String username = "Alice.Smith";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainees/{username}/activate", username)
@@ -192,7 +197,7 @@ class TraineeControllerTest
 
         username = "Unknown.Unknown";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainees/{username}/activate", username)
@@ -208,7 +213,7 @@ class TraineeControllerTest
 
         String username = "Alice.Smith";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainees/{username}/deactivate", username)
@@ -219,7 +224,7 @@ class TraineeControllerTest
 
         username = "Unknown.Unknown";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainees/{username}/activate", username)
@@ -235,7 +240,7 @@ class TraineeControllerTest
 
         String username = "Ethan.Davis";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .delete("/trainees/{username}", username)
@@ -246,7 +251,7 @@ class TraineeControllerTest
 
         username = "Unknown.Unknown";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .delete("/trainees/{username}", username)
@@ -258,15 +263,17 @@ class TraineeControllerTest
     @DisplayName("Tests HTTP 200 & 401 on POST trainees/login")
     void login()
     {
+        TraineeLoginRequest traineeDto = new TraineeLoginRequest();
+
         // 200 OK
 
-        String username = "user.test";
-        String password = "1234";
+        traineeDto.setUsername("user.test");
+        traineeDto.setPassword("1234");
 
         given()
             .accept(ContentType.JSON)
-            .queryParam("username", username)
-            .queryParam("password", password)
+            .body(traineeDto)
+            .contentType(ContentType.JSON)
         .when()
             .post("/trainees/login")
         .then()
@@ -274,34 +281,35 @@ class TraineeControllerTest
 
         // 401 UNAUTHORIZED
 
-        username = "invalid.invalid";
-        password = "invalid";
+        traineeDto.setUsername("invalid.invalid");
+        traineeDto.setPassword("invalid");
 
         given()
-                .accept(ContentType.JSON)
-                .queryParam("username", username)
-                .queryParam("password", password)
-                .when()
-                .post("/trainees/login")
-                .then()
-                .statusCode(401);
+            .accept(ContentType.JSON)
+            .body(traineeDto)
+            .contentType(ContentType.JSON)
+        .when()
+            .post("/trainees/login")
+        .then()
+            .statusCode(401);
     }
 
     @Test
     @DisplayName("Tests HTTP 200 & 401 on PUT trainees/change-password")
     void changePassword()
     {
+        TraineeChangePasswordRequest traineeDto = new TraineeChangePasswordRequest();
+
         // 200 OK
 
-        String username = "user.test";
-        String oldPassword = "1234";
-        String newPassword = "1234";
+        traineeDto.setUsername("user.test");
+        traineeDto.setOldPassword("1234");
+        traineeDto.setNewPassword("1234");
 
         given()
             .accept(ContentType.JSON)
-            .queryParam("username", username)
-            .queryParam("oldPassword", oldPassword)
-            .queryParam("newPassword", newPassword)
+            .body(traineeDto)
+            .contentType(ContentType.JSON)
         .when()
             .put("/trainees/change-password")
         .then()
@@ -309,13 +317,12 @@ class TraineeControllerTest
 
         // 401 UNAUTHORIZED
 
-        username = "invalid.invalid";
+        traineeDto.setUsername("invalid.invalid");
 
         given()
             .accept(ContentType.JSON)
-            .queryParam("username", username)
-            .queryParam("oldPassword", oldPassword)
-            .queryParam("newPassword", newPassword)
+            .body(traineeDto)
+            .contentType(ContentType.JSON)
         .when()
             .put("/trainees/change-password")
         .then()

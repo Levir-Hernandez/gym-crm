@@ -46,4 +46,9 @@ public abstract class TemplateService<Id,
     {
         return repository.findAll(pageable);
     }
+
+    public long getEntitiesCount()
+    {
+        return repository.count();
+    }
 }

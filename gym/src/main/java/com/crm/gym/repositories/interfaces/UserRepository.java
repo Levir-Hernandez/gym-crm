@@ -14,7 +14,6 @@ public interface UserRepository<S extends User> extends TemplateRepository<Long,
     Optional<S> findByUsername(String username);
     List<S> findByUsernameStartsWith(String prefix);
     boolean existsByUsername(String username);
-    boolean existsByUsernameAndPassword(String username, String password);
 
     @Transactional
     default S updateByUsername(String username, S user)

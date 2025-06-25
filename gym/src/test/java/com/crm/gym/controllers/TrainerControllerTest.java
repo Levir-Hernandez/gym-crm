@@ -1,10 +1,8 @@
 package com.crm.gym.controllers;
 
-import com.crm.gym.dtos.trainer.TrainerModificationEmbeddedRequest;
-import com.crm.gym.dtos.trainer.TrainerModificationRequest;
-import com.crm.gym.dtos.trainer.TrainerRegistrationRequest;
-import com.crm.gym.entities.Trainer;
-import com.crm.gym.services.TrainerService;
+import com.crm.gym.dtos.trainee.TraineeRegistrationRequest;
+import com.crm.gym.dtos.trainee.TraineeTokenWrapper;
+import com.crm.gym.dtos.trainer.*;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.Base64;
 import java.util.Set;
 
 import static io.restassured.RestAssured.given;
@@ -24,27 +21,43 @@ import static org.hamcrest.Matchers.equalTo;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TrainerControllerTest
 {
-    private final static String CREDENTIALS = "user.test:1234";
-    private static String TOKEN;
+    private static String TRAINER_ACCESS_TOKEN;
+    private static String TRAINEE_ACCESS_TOKEN;
 
     @Autowired
-    public TrainerControllerTest(TrainerService trainerService)
+    public TrainerControllerTest(TrainerController trainerController, TraineeController traineeController)
     {
-        Trainer trainer = new Trainer(null, "user", "test", null, null, null, null);
-        trainer = trainerService.saveEntity(trainer);
-        trainerService.changePassword(trainer.getUsername(), trainer.getPassword(), "1234");
-    }
+        TrainerRegistrationRequest trainerRegistrationRequest = new TrainerRegistrationRequest();
+        trainerRegistrationRequest.setFirstname("trainer");
+        trainerRegistrationRequest.setLastname("test");
 
+        TrainerTokenWrapper trainerRespDto = (TrainerTokenWrapper) trainerController.createTrainer(trainerRegistrationRequest).getContent();
+
+        TRAINER_ACCESS_TOKEN = trainerRespDto.getAccessToken();
+
+        TrainerChangePasswordRequest trainerChangePasswordRequest = new TrainerChangePasswordRequest();
+        trainerChangePasswordRequest.setUsername(trainerRespDto.getUsername());
+        trainerChangePasswordRequest.setOldPassword(((TrainerCredentials)trainerRespDto.getUser()).getPassword());
+        trainerChangePasswordRequest.setNewPassword("1234");
+
+        trainerController.changePassword(trainerChangePasswordRequest);
+        trainerController.deactivateTrainer(trainerRespDto.getUsername());
+
+        TraineeRegistrationRequest traineeRegistrationRequest = new TraineeRegistrationRequest();
+        traineeRegistrationRequest.setFirstname("trainee");
+        traineeRegistrationRequest.setLastname("test");
+
+        TRAINEE_ACCESS_TOKEN = ((TraineeTokenWrapper)traineeController.createTrainee(traineeRegistrationRequest).getContent()).getAccessToken();
+    }
+    
     @BeforeAll
     static void beforeAll()
     {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8080;
-
-        TOKEN = Base64.getEncoder().encodeToString(CREDENTIALS.getBytes());
     }
 
     @Test
@@ -69,6 +82,7 @@ class TrainerControllerTest
             .post("/trainers")
         .then()
             .statusCode(201)
+            .rootPath("trainer")
             .body("username", equalTo(traineeFirstname+"."+traineeLastname));
 
         // 400 BAD_REQUEST
@@ -90,7 +104,7 @@ class TrainerControllerTest
     void getAllTrainers()
     {
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainers")
@@ -109,7 +123,7 @@ class TrainerControllerTest
         String username = firstname+"."+lastname;
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainers/{username}", username)
@@ -123,7 +137,7 @@ class TrainerControllerTest
         username = "Unknown.Unknown";
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainers/{username}", username)
@@ -147,7 +161,7 @@ class TrainerControllerTest
         // 200 OK
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(trainerDto)
             .contentType(ContentType.JSON)
@@ -163,7 +177,7 @@ class TrainerControllerTest
         trainerDto.setFirstname(null);
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(trainerDto)
             .contentType(ContentType.JSON)
@@ -181,7 +195,7 @@ class TrainerControllerTest
 
         String username = "Laura.Williams";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainers/{username}/activate", username)
@@ -192,7 +206,7 @@ class TrainerControllerTest
 
         username = "Unknown.Unknown";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainers/{username}/activate", username)
@@ -208,7 +222,7 @@ class TrainerControllerTest
 
         String username = "Tom.Anderson";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainers/{username}/deactivate", username)
@@ -219,7 +233,7 @@ class TrainerControllerTest
 
         username = "Unknown.Unknown";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINER_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .patch("/trainers/{username}/activate", username)
@@ -231,68 +245,70 @@ class TrainerControllerTest
     @DisplayName("Tests HTTP 200 & 401 on POST trainers/login")
     void login()
     {
+        TrainerLoginRequest trainerDto = new TrainerLoginRequest();
+
         // 200 OK
 
-        String username = "user.test";
-        String password = "1234";
+        trainerDto.setUsername("trainer.test");
+        trainerDto.setPassword("1234");
 
         given()
-                .accept(ContentType.JSON)
-                .queryParam("username", username)
-                .queryParam("password", password)
-                .when()
-                .post("/trainers/login")
-                .then()
-                .statusCode(200);
+            .accept(ContentType.JSON)
+            .body(trainerDto)
+            .contentType(ContentType.JSON)
+        .when()
+            .post("/trainers/login")
+        .then()
+            .statusCode(200);
 
         // 401 UNAUTHORIZED
 
-        username = "invalid.invalid";
-        password = "invalid";
+        trainerDto.setUsername("invalid.invalid");
+        trainerDto.setPassword("invalid");
 
         given()
-                .accept(ContentType.JSON)
-                .queryParam("username", username)
-                .queryParam("password", password)
-                .when()
-                .post("/trainers/login")
-                .then()
-                .statusCode(401);
+            .accept(ContentType.JSON)
+            .body(trainerDto)
+            .contentType(ContentType.JSON)
+        .when()
+            .post("/trainers/login")
+        .then()
+            .statusCode(401);
     }
 
     @Test
     @DisplayName("Tests HTTP 200 & 401 on PUT trainers/change-password")
     void changePassword()
     {
+        TrainerChangePasswordRequest trainerDto = new TrainerChangePasswordRequest();
+
         // 200 OK
 
-        String username = "user.test";
-        String oldPassword = "1234";
-        String newPassword = "1234";
+        trainerDto.setUsername("trainer.test");
+        trainerDto.setOldPassword("1234");
+        trainerDto.setNewPassword("1234");
 
         given()
-                .accept(ContentType.JSON)
-                .queryParam("username", username)
-                .queryParam("oldPassword", oldPassword)
-                .queryParam("newPassword", newPassword)
-                .when()
-                .put("/trainers/change-password")
-                .then()
-                .statusCode(200);
+            .accept(ContentType.JSON)
+            .body(trainerDto)
+            .contentType(ContentType.JSON)
+        .when()
+            .put("/trainers/change-password")
+        .then()
+            .statusCode(200);
 
         // 401 UNAUTHORIZED
 
-        username = "invalid.invalid";
+        trainerDto.setUsername("invalid.invalid");
 
         given()
-                .accept(ContentType.JSON)
-                .queryParam("username", username)
-                .queryParam("oldPassword", oldPassword)
-                .queryParam("newPassword", newPassword)
-                .when()
-                .put("/trainers/change-password")
-                .then()
-                .statusCode(401);
+            .accept(ContentType.JSON)
+            .body(trainerDto)
+            .contentType(ContentType.JSON)
+        .when()
+            .put("/trainers/change-password")
+        .then()
+            .statusCode(401);
     }
 
     @Test
@@ -303,7 +319,7 @@ class TrainerControllerTest
 
         String traineeUsername = "Alice.Smith";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainees/{traineeUsername}/trainers/unassigned", traineeUsername)
@@ -316,7 +332,7 @@ class TrainerControllerTest
 
         traineeUsername = "Unknown.Unknown";
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
         .when()
             .get("/trainees/{traineeUsername}/trainers/unassigned", traineeUsername)
@@ -340,7 +356,7 @@ class TrainerControllerTest
         Set<TrainerModificationEmbeddedRequest> trainerDtos = Set.of(trainerDto);
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(trainerDtos)
             .contentType(ContentType.JSON)
@@ -354,7 +370,7 @@ class TrainerControllerTest
         trainerDto.setUsername(null);
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(trainerDtos)
             .contentType(ContentType.JSON)
@@ -369,7 +385,7 @@ class TrainerControllerTest
         trainerDto.setUsername("Jane.Smith");
 
         given()
-            .header("Authorization", "Basic " + TOKEN)
+            .header("Authorization", "Bearer " + TRAINEE_ACCESS_TOKEN)
             .accept(ContentType.JSON)
             .body(trainerDtos)
             .contentType(ContentType.JSON)

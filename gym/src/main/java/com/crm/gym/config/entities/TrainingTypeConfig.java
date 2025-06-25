@@ -1,5 +1,6 @@
-package com.crm.gym.config.repositories;
+package com.crm.gym.config.entities;
 
+import com.crm.gym.services.TrainingTypeService;
 import com.crm.gym.util.EntityResourceLoader;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,13 +9,13 @@ import com.crm.gym.repositories.interfaces.TrainingTypeRepository;
 import com.crm.gym.entities.TrainingType;
 
 @Configuration
-public class TrainingTypeConfig extends TemplateConfig<Long, TrainingType>
+public class TrainingTypeConfig extends TemplateConfig<Long, TrainingType, TrainingTypeRepository>
 {
     public TrainingTypeConfig(@Value("${storage.training-types.path:}") String trainingTypesPath,
-                              TrainingTypeRepository trainingTypeRepository,
+                              TrainingTypeService trainingTypeService,
                               EntityResourceLoader entityResourceLoader)
     {
-        super(trainingTypesPath, trainingTypeRepository, entityResourceLoader);
+        super(trainingTypesPath, trainingTypeService, entityResourceLoader);
     }
 
     @Override
@@ -24,7 +25,7 @@ public class TrainingTypeConfig extends TemplateConfig<Long, TrainingType>
     protected boolean createEntitiesFromJson()
     {
         boolean createdFromJson = super.createEntitiesFromJson();
-        if(entityRepository.count() < 1 && !createdFromJson)
+        if(entityService.getEntitiesCount() < 1 && !createdFromJson)
         {
             throw new UnavailableTrainingTypesException();
         }
