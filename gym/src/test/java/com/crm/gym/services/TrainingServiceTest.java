@@ -11,6 +11,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,7 +57,7 @@ class TrainingServiceTest
 
         Training trainingExpected = trainingService.saveEntity(training);
 
-        Long id = trainingExpected.getId();
+        UUID id = trainingExpected.getId();
         Training trainingActual = trainingService.getEntityById(id);
 
         assertEquals(trainingExpected, trainingActual);
@@ -65,10 +67,8 @@ class TrainingServiceTest
     @DisplayName("Should return null for non existent Training")
     void getEntityById2()
     {
-        int totalTrainings = trainingService.getAllEntities().size();
-        Long id = 10L + totalTrainings;
-
-        Training training = trainingService.getEntityById(id);
+        UUID nonExistentId = UUID.randomUUID();
+        Training training = trainingService.getEntityById(nonExistentId);
         assertNull(training);
     }
 
@@ -76,10 +76,7 @@ class TrainingServiceTest
     @DisplayName("Should retrieve existing trainings by criteria")
     void getTrainingsByCriteria()
     {
-        List<Training> expectedTrainings = List.of(
-                trainingService.getEntityById(1L),
-                trainingService.getEntityById(2L)
-        );
+        List<Training> expectedTrainings = trainingService.getAllEntities().subList(0,2);
 
         TrainingQueryCriteria criteria = TrainingQueryCriteria.builder()
                 .traineeUsername("Alice.Smith")

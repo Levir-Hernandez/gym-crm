@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import com.crm.gym.repositories.interfaces.TrainingTypeRepository;
 import com.crm.gym.entities.TrainingType;
 
+import java.util.UUID;
+
 @Configuration
-public class TrainingTypeConfig extends TemplateConfig<Long, TrainingType, TrainingTypeRepository>
+public class TrainingTypeConfig extends TemplateConfig<UUID, TrainingType, TrainingTypeRepository>
 {
     public TrainingTypeConfig(@Value("${storage.training-types.path:}") String trainingTypesPath,
                               TrainingTypeService trainingTypeService,

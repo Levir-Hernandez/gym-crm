@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.crm.gym.repositories.interfaces.Identifiable;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -16,10 +17,10 @@ import com.crm.gym.repositories.interfaces.Identifiable;
         name="users",
         indexes = {@Index(name = "users_username_idx", columnList = "username", unique = true)}
 )
-public abstract class User implements Identifiable<Long>
+public abstract class User implements Identifiable<UUID>
 {
-    @Id @GeneratedValue
-    private Long id;
+    @Id @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     private String firstname;
     private String lastname;
@@ -27,6 +28,6 @@ public abstract class User implements Identifiable<Long>
     private String password;
     private Boolean isActive;
 
-    public User(Long id) {this.id = id;}
+    public User(UUID id) {this.id = id;}
     public User(String username) {this.username = username;}
 }

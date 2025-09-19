@@ -6,8 +6,10 @@ import com.crm.gym.util.PasswordGenerator;
 import com.crm.gym.util.UsernameGenerator;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
-public class TrainerFactory implements UserFactory<Long, Trainer>
+public class TrainerFactory implements UserFactory<UUID, Trainer>
 {
     private UsernameGenerator usernameGenerator;
     private PasswordGenerator passwordGenerator;

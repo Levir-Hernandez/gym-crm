@@ -1,9 +1,6 @@
 package com.crm.gym.repositories.implementations;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.crm.gym.entities.Trainer;
@@ -17,7 +14,7 @@ import org.springframework.stereotype.Repository;
 import com.crm.gym.repositories.interfaces.TrainerRefsManager;
 
 @Repository
-public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
+public class TrainerRepositoryImpl extends TemplateRepositoryImpl<UUID, Trainer>
         implements TrainerRefsManager, MassiveUpdateRepository
 {
     @Override
@@ -32,7 +29,7 @@ public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
     }
 
     @Override
-    public Trainer update(Long entityId, Trainer trainer)
+    public Trainer update(UUID entityId, Trainer trainer)
     {
         resolveReferencesByAltKeys(trainer);
         nullifyInvalidReferences(trainer);
@@ -75,11 +72,11 @@ public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
         Set<String> usernames = trainers.stream()
                 .map(Trainer::getUsername).collect(Collectors.toSet());
 
-        Map<String, Long> idMap = fetchTrainersIds(traineeUsername, usernames);
+        Map<String, UUID> idMap = fetchTrainersIds(traineeUsername, usernames);
 
         // Ensure trainers have appropriate ids before merging
         trainers.forEach(trainer -> {
-            Long id = idMap.get(trainer.getUsername());
+            UUID id = idMap.get(trainer.getUsername());
             trainer.setId(id);
         });
 
@@ -97,7 +94,7 @@ public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
         return trainers;
     }
 
-    private Map<String, Long> fetchTrainersIds(String traineeUsername, Set<String> usernames)
+    private Map<String, UUID> fetchTrainersIds(String traineeUsername, Set<String> usernames)
     {
         TypedQuery<Tuple> query = em.createQuery(
                 "SELECT DISTINCT t3.username AS username, t3.id AS id " + // Fetch trainers' usernames and ids
@@ -114,7 +111,7 @@ public class TrainerRepositoryImpl extends TemplateRepositoryImpl<Long, Trainer>
         return query.getResultList().stream()
                 .collect(Collectors.toMap(
                                 tuple -> tuple.get("username", String.class),
-                                tuple -> tuple.get("id", Long.class)
+                                tuple -> tuple.get("id", UUID.class)
                         )
                 );
     }

@@ -1,13 +1,15 @@
 package com.crm.gym.factories;
 
 import java.time.LocalDate;
+import java.util.UUID;
+
 import com.crm.gym.entities.Trainee;
 import com.crm.gym.util.PasswordGenerator;
 import com.crm.gym.util.UsernameGenerator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TraineeFactory implements UserFactory<Long, Trainee>
+public class TraineeFactory implements UserFactory<UUID, Trainee>
 {
     private UsernameGenerator usernameGenerator;
     private PasswordGenerator passwordGenerator;

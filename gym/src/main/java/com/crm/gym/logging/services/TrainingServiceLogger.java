@@ -12,11 +12,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.ToIntFunction;
 
 @Aspect
 @Component
-public class TrainingServiceLogger extends TemplateServiceLogger<Long, Training>
+public class TrainingServiceLogger extends TemplateServiceLogger<UUID, Training>
 {
     private final String LIST = "java.util.List";
     private final String TRAINING_QUERY_CRITERIA = "com.crm.gym.repositories.TrainingQueryCriteria";

@@ -16,7 +16,7 @@ import java.util.Set;
 
 @Aspect
 @Component
-public class TrainerRepositoryLogger extends TemplateRepositoryLogger<Long, Trainer>
+public class TrainerRepositoryLogger extends UserRepositoryLogger<Trainer>
 {
     private final String SET = "java.util.Set";
 

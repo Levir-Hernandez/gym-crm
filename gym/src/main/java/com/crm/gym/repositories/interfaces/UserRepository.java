@@ -3,13 +3,15 @@ package com.crm.gym.repositories.interfaces;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+
 import com.crm.gym.entities.User;
 
 import jakarta.transaction.Transactional;
 import org.springframework.data.repository.NoRepositoryBean;
 
 @NoRepositoryBean
-public interface UserRepository<S extends User> extends TemplateRepository<Long, S>
+public interface UserRepository<S extends User> extends TemplateRepository<UUID, S>
 {
     Optional<S> findByUsername(String username);
     List<S> findByUsernameStartsWith(String prefix);
@@ -18,7 +20,7 @@ public interface UserRepository<S extends User> extends TemplateRepository<Long,
     @Transactional
     default S updateByUsername(String username, S user)
     {
-        Long id = findByUsername(username).map(User::getId).orElse(null);
+        UUID id = findByUsername(username).map(User::getId).orElse(null);
 
         if(Objects.nonNull(id))
         {

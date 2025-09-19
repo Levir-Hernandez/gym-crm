@@ -10,11 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Aspect
 @Component
-public class TrainingRepositoryLogger extends TemplateRepositoryLogger<Long, Training>
+public class TrainingRepositoryLogger extends TemplateRepositoryLogger<UUID, Training>
 {
     public TrainingRepositoryLogger()
     {

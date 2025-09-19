@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import com.crm.gym.repositories.interfaces.Identifiable;
 
@@ -13,10 +14,10 @@ import com.crm.gym.repositories.interfaces.Identifiable;
 
 @Entity
 @Table(name="trainings")
-public class Training implements Identifiable<Long>
+public class Training implements Identifiable<UUID>
 {
     @Id @GeneratedValue
-    private Long id;
+    private UUID id;
 
     private String name;
     private LocalDate date;
@@ -34,5 +35,5 @@ public class Training implements Identifiable<Long>
     @JoinColumn(name = "training_type_fk")
     private TrainingType trainingType;
 
-    public Training(Long id) {this.id = id;}
+    public Training(UUID id) {this.id = id;}
 }

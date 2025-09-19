@@ -6,12 +6,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
+
 import com.crm.gym.entities.Training;
 import com.crm.gym.repositories.TrainingQueryCriteria;
 import com.crm.gym.repositories.interfaces.TrainingRepository;
 
 @Service
-public class TrainingService extends TemplateService<Long, Training, TrainingRepository>
+public class TrainingService extends TemplateService<UUID, Training, TrainingRepository>
 {
     public TrainingService(TrainingRepository repository)
     {

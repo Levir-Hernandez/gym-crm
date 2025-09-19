@@ -11,8 +11,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -54,7 +56,7 @@ class TrainerServiceTest
     @DisplayName("Should update existing Trainer")
     void updateEntity()
     {
-        Long id = 11L;
+        UUID id = trainerService.getUserByUsername("Larry.Williams").getId();
         Trainer newTrainerInfo = new Trainer(null,
                 "Larry", "Williams",
                 "Willy", "secret1234",
@@ -76,19 +78,19 @@ class TrainerServiceTest
     void updateEntity2()
     {
         int totalTrainers = trainerService.getAllEntities().size();
-        Long id = 10L + totalTrainers;
+        UUID nonExistentId = UUID.randomUUID();
 
         Trainer newTrainerInfo = new Trainer(null,
                 "Larry", "Williams",
                 "Willy", "secret1234",
                 false, null);
 
-        Trainer oldTrainer = trainerService.getEntityById(id);
+        Trainer oldTrainer = trainerService.getEntityById(nonExistentId);
         assertNull(oldTrainer);
 
-        trainerService.updateEntity(id, newTrainerInfo);
+        trainerService.updateEntity(nonExistentId, newTrainerInfo);
 
-        Trainer newTrainer = trainerService.getEntityById(id);
+        Trainer newTrainer = trainerService.getEntityById(nonExistentId);
         assertNull(newTrainer);
 
         int actualTrainers = trainerService.getAllEntities().size();
@@ -151,7 +153,7 @@ class TrainerServiceTest
 
         Trainer trainerExpected = trainerService.saveEntity(trainer);
 
-        Long id = trainerExpected.getId();
+        UUID id = trainerExpected.getId();
         Trainer trainerActual = trainerService.getEntityById(id);
 
         String rawPassword = trainerExpected.getPassword();
@@ -168,10 +170,8 @@ class TrainerServiceTest
     @DisplayName("Should return null for non existent Trainer")
     void getEntityById2()
     {
-        int totalTrainers = trainerService.getAllEntities().size();
-        Long id = 10L + totalTrainers;
-
-        Trainer trainer = trainerService.getEntityById(id);
+        UUID nonExistentId = UUID.randomUUID();
+        Trainer trainer = trainerService.getEntityById(nonExistentId);
         assertNull(trainer);
     }
 
@@ -179,7 +179,7 @@ class TrainerServiceTest
     @DisplayName("Should retrieve an existent Trainer by username")
     void getUserByUsername1()
     {
-        Trainer trainerExpected = trainerService.getEntityById(6L);
+        Trainer trainerExpected = trainerService.getAllEntities().get(0);
 
         String username = "John.Doe";
         Trainer trainerActual = trainerService.getUserByUsername(username);
@@ -277,7 +277,7 @@ class TrainerServiceTest
 
         List<Trainer> actualUnassignedTrainers = trainerService.getAllUnassignedForTraineeByUsername(username);
 
-        assertEquals(expectedUnassignedTrainers, actualUnassignedTrainers);
+        assertThat(actualUnassignedTrainers).containsExactlyInAnyOrderElementsOf(expectedUnassignedTrainers);
     }
 
     @Test

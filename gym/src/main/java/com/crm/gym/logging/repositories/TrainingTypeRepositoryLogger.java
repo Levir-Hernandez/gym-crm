@@ -7,9 +7,11 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Aspect
 @Component
-public class TrainingTypeRepositoryLogger extends TemplateRepositoryLogger<Long, TrainingType>
+public class TrainingTypeRepositoryLogger extends TemplateRepositoryLogger<UUID, TrainingType>
 {
     public TrainingTypeRepositoryLogger()
     {

@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -26,12 +27,12 @@ public class Trainer extends User
     @OneToMany(mappedBy = "trainer")
     private List<Training> trainings;
 
-    public Trainer(Long id, String firstname, String lastname, String username, String password, Boolean isActive, TrainingType specialization)
+    public Trainer(UUID id, String firstname, String lastname, String username, String password, Boolean isActive, TrainingType specialization)
     {
         super(id, firstname, lastname, username, password, isActive);
         this.specialization = specialization;
     }
 
-    public Trainer(Long id) {super(id);}
+    public Trainer(UUID id) {super(id);}
     public Trainer(String username) {super(username);}
 }

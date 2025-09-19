@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.crm.gym.repositories.interfaces.Identifiable;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,13 +17,13 @@ import com.crm.gym.repositories.interfaces.Identifiable;
         name="training_types",
         indexes = {@Index(name = "training_types_name_idx", columnList = "name", unique = true)}
 )
-public class TrainingType implements Identifiable<Long>
+public class TrainingType implements Identifiable<UUID>
 {
     @Id @GeneratedValue
-    private Long id;
+    private UUID id;
 
     private String name;
 
-    public TrainingType(Long id) {this.id = id;}
+    public TrainingType(UUID id) {this.id = id;}
     public TrainingType(String name) {this.name = name;}
 }

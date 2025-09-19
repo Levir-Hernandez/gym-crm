@@ -2,6 +2,7 @@ package com.crm.gym.services;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 import com.crm.gym.entities.User;
@@ -10,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 public abstract class UserService<S extends User, R extends UserRepository<S>>
-        extends TemplateService<Long, S, R>
+        extends TemplateService<UUID, S, R>
 {
     private PasswordEncoder passwordEncoder;
 
@@ -26,7 +27,7 @@ public abstract class UserService<S extends User, R extends UserRepository<S>>
     }
 
     @Override
-    protected S updateEntity(Long entityId, S user)
+    protected S updateEntity(UUID entityId, S user)
     {
         return executeWithPasswordEncoding(user, u -> super.updateEntity(entityId, u));
     }

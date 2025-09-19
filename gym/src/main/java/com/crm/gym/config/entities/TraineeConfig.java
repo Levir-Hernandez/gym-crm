@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import com.crm.gym.repositories.interfaces.TraineeRepository;
 import com.crm.gym.entities.Trainee;
 
+import java.util.UUID;
+
 @Configuration
-public class TraineeConfig extends TemplateConfig<Long, Trainee, TraineeRepository>
+public class TraineeConfig extends TemplateConfig<UUID, Trainee, TraineeRepository>
 {
     public TraineeConfig(@Value("${storage.trainees.path:}") String traineesPath,
                          TraineeService traineeService,

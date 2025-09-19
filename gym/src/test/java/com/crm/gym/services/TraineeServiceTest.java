@@ -10,6 +10,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,7 +54,8 @@ class TraineeServiceTest
     @DisplayName("Should update existing Trainee")
     void updateEntity()
     {
-        Long id = 11L;
+        UUID id = traineeService.getUserByUsername("Larry.Williams").getId();
+
         Trainee newTraineeInfo = new Trainee(null,
                 "Larry", "Williams",
                 "Willy", "secret1234",
@@ -75,19 +77,19 @@ class TraineeServiceTest
     void updateEntity2()
     {
         int totalTrainees = traineeService.getAllEntities().size();
-        Long id = 10L + totalTrainees;
+        UUID nonExistentId = UUID.randomUUID();
 
         Trainee newTraineeInfo = new Trainee(null,
                 "Larry", "Williams",
                 "Willy", "secret1234",
                 false, LocalDate.parse("1991-03-21"), "123 Harlem St");
 
-        Trainee oldTrainee = traineeService.getEntityById(id);
+        Trainee oldTrainee = traineeService.getEntityById(nonExistentId);
         assertNull(oldTrainee);
 
-        traineeService.updateEntity(id, newTraineeInfo);
+        traineeService.updateEntity(nonExistentId, newTraineeInfo);
 
-        Trainee newTrainee = traineeService.getEntityById(id);
+        Trainee newTrainee = traineeService.getEntityById(nonExistentId);
         assertNull(newTrainee);
 
         int actualTrainees = traineeService.getAllEntities().size();
@@ -143,7 +145,7 @@ class TraineeServiceTest
     @DisplayName("Should delete existing Trainee")
     void deleteEntity()
     {
-        Long id = 5L;
+        UUID id = traineeService.getUserByUsername("Ethan.Davis").getId();
 
         Trainee trainee = traineeService.getEntityById(id);
         assertNotNull(trainee);
@@ -159,14 +161,14 @@ class TraineeServiceTest
     void deleteEntity2()
     {
         int totalTrainees = traineeService.getAllEntities().size();
-        Long id = 10L + totalTrainees;
+        UUID nonExistentId = UUID.randomUUID();
 
-        Trainee trainee = traineeService.getEntityById(id);
+        Trainee trainee = traineeService.getEntityById(nonExistentId);
         assertNull(trainee);
 
-        traineeService.deleteEntity(id);
+        traineeService.deleteEntity(nonExistentId);
 
-        trainee = traineeService.getEntityById(id);
+        trainee = traineeService.getEntityById(nonExistentId);
         assertNull(trainee);
 
         int actualTrainees = traineeService.getAllEntities().size();
@@ -218,7 +220,7 @@ class TraineeServiceTest
 
         Trainee traineeExpected = traineeService.saveEntity(trainee);
 
-        Long id = traineeExpected.getId();
+        UUID id = traineeExpected.getId();
         Trainee traineeActual = traineeService.getEntityById(id);
 
         String rawPassword = traineeExpected.getPassword();
@@ -235,10 +237,8 @@ class TraineeServiceTest
     @DisplayName("Should return null for non existent Trainee")
     void getEntityById2()
     {
-        int totalTrainees = traineeService.getAllEntities().size();
-        Long id = 10L + totalTrainees;
-
-        Trainee trainee = traineeService.getEntityById(id);
+        UUID nonExistentId = UUID.randomUUID();
+        Trainee trainee = traineeService.getEntityById(nonExistentId);
         assertNull(trainee);
     }
 
@@ -246,7 +246,7 @@ class TraineeServiceTest
     @DisplayName("Should retrieve an existent Trainee by username")
     void getUserByUsername1()
     {
-        Trainee traineeExpected = traineeService.getEntityById(3L);
+        Trainee traineeExpected = traineeService.getAllEntities().get(2);
 
         String username = "Charlie.Brown";
         Trainee traineeActual = traineeService.getUserByUsername(username);

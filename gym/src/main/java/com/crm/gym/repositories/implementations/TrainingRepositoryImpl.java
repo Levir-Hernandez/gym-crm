@@ -14,16 +14,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.function.*;
 
 @Repository
 public class TrainingRepositoryImpl
-        extends TemplateRepositoryImpl<Long, Training>
+        extends TemplateRepositoryImpl<UUID, Training>
         implements DynamicQueryRepository
 {
     @Override
@@ -38,7 +35,7 @@ public class TrainingRepositoryImpl
     }
 
     @Override
-    public Training update(Long entityId, Training training)
+    public Training update(UUID entityId, Training training)
     {
         resolveReferencesByAltKeys(training);
         nullifyInvalidReferences(training);

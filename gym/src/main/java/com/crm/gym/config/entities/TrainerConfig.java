@@ -9,9 +9,11 @@ import org.springframework.context.annotation.DependsOn;
 import com.crm.gym.repositories.interfaces.TrainerRepository;
 import com.crm.gym.entities.Trainer;
 
+import java.util.UUID;
+
 @Configuration
 @DependsOn("trainingTypeConfig")
-public class TrainerConfig extends TemplateConfig<Long, Trainer, TrainerRepository>
+public class TrainerConfig extends TemplateConfig<UUID, Trainer, TrainerRepository>
 {
     public TrainerConfig(@Value("${storage.trainers.path:}") String trainersPath,
                          TrainerService trainerService,

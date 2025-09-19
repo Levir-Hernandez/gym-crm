@@ -7,8 +7,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 
 import java.util.Objects;
+import java.util.UUID;
 
-public abstract class UserServiceLogger<S extends User> extends TemplateServiceLogger<Long, S>
+public abstract class UserServiceLogger<S extends User> extends TemplateServiceLogger<UUID, S>
 {
     private final String USER = "com.crm.gym.entities.User";
 
